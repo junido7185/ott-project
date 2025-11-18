@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My List - OTT-Swipe</title>
+    <link rel="stylesheet" href="/css/style.css"> </head>
+<body>
+    <header>
+        <h1>OTT-Swipe</h1>
+        <a href="/">스와이프 하러가기</a> 
+    </header>
+
+    <div class="list-page-container">
+        <h2>My Liked Videos</h2>
+        <hr> <div class="list-container">
+            <% if (videos && videos.length > 0) { %>
+                <% videos.forEach(video => { %>
+                    <div class="list-item">
+                       <img src="<%= video.posterImageUrl %>" alt="<%= video.title %>">
+                       <h4><%= video.title %></h4>
+                       <span class="list-item-ott"><%= video.ottPlatform %></span>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p class="empty-list-message">좋아요 누른 비디오가 없습니다.</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

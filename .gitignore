@@ -1,0 +1,14 @@
+# 1. 의존성 모듈 (가장 중요)
+node_modules/
+
+# 2. 환경변수 및 보안 파일 (절대 업로드 금지)
+.env
+
+# 3. 운영체제 시스템 파일 (지저분한 파일 제거)
+.DS_Store
+Thumbs.db
+
+# 4. 로그 파일 (에러 로그 등)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입 - OTT Swipe</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="list-page-container" style="max-width: 400px; margin-top: 100px;">
+        <h2 style="text-align: center;">회원가입</h2>
+        
+        <form action="/register" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" name="username" placeholder="아이디" required style="padding: 10px;">
+            
+            <input type="password" id="pw" name="password" placeholder="비밀번호" required style="padding: 10px;">
+            
+            <input type="password" id="pw-confirm" name="confirmPassword" placeholder="비밀번호 확인" required style="padding: 10px;">
+            
+            <span id="pw-message" style="font-size: 12px; text-align: center;"></span>
+
+            <button type="submit" class="btn" style="background: #e50914; color: white; padding: 10px;">가입하기</button>
+        </form>
+
+        <p style="text-align: center; margin-top: 20px;">
+            이미 계정이 있으신가요? <a href="/login" style="color: #e50914;">로그인</a>
+        </p>
+    </div>
+
+    <script>
+        const pwInput = document.getElementById('pw');
+        const confirmInput = document.getElementById('pw-confirm');
+        const message = document.getElementById('pw-message');
+        const submitBtn = document.querySelector('button[type="submit"]');
+
+        function checkPassword() {
+            const pw = pwInput.value;
+            const confirm = confirmInput.value;
+
+            if (pw === "" || confirm === "") {
+                message.innerText = "";
+                submitBtn.disabled = false;
+                return;
+            }
+
+            if (pw === confirm) {
+                message.innerText = "비밀번호가 일치합니다.";
+                message.style.color = "#4ccc93"; // 초록색
+                submitBtn.disabled = false;
+            } else {
+                message.innerText = "비밀번호가 일치하지 않습니다.";
+                message.style.color = "#ff5864"; // 빨간색
+                submitBtn.disabled = true; // 일치하지 않으면 가입 버튼 비활성화
+            }
+        }
+
+        pwInput.addEventListener('keyup', checkPassword);
+        confirmInput.addEventListener('keyup', checkPassword);
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTT-Swipe</title>
+    <link rel="stylesheet" href="/css/style.css"> 
+</head>
+<body data-user-id="<%= user ? user._id : '' %>"> <header>
+        <h1>OTT-Swipe</h1>
+        <a href="/my-list">My List</a>
+    </header>
+
+    <div class="card-container">
+        <% if (video) { %>
+            <div class="video-card">
+                <div class="card-image">
+                    <img src="<%= video.posterImageUrl %>" alt="<%= video.title %> 포스터">
+                </div>
+                
+                <div class="card-info">
+                    <h2><%= video.title %></h2>
+                    <div class="metadata">
+                        <span class="ott-tag"><%= video.ottPlatform %></span>
+                        <span class="genre-tag"><%= video.genre %></span>
+                    </div>
+                    <hr class="info-divider">
+                    <div class="description-wrapper">
+                        <p class="description"><%= video.description %></p>
+                        <span class="read-more">...더 보기</span>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <h2>더 이상 볼 비디오가 없습니다.</h2>
+        <% } %>
+    </div>
+
+    <% if (video) { %>
+        <div class="action-buttons">
+            <button id="pass-btn" data-id="<%= video._id %>">❌</button>
+            <button id="like-btn" data-id="<%= video._id %>">❤️</button>
+        </div>
+    <% } %>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
