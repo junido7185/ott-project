@@ -6,14 +6,15 @@
     <title>OTT-Swipe</title>
     <link rel="stylesheet" href="/css/style.css"> 
 </head>
-<body data-user-id="<%= user ? user._id : '' %>"> <header>
+<body data-user-id="<%= user ? user._id : '' %>">
+    <header>
         <h1>OTT-Swipe</h1>
         <a href="/my-list">My List</a>
     </header>
 
     <div class="card-container">
         <% if (video) { %>
-            <div class="video-card">
+            <div class="video-card" data-video-id="<%= video._id %>">
                 <div class="card-image">
                     <img src="<%= video.posterImageUrl %>" alt="<%= video.title %> 포스터">
                 </div>
@@ -36,12 +37,7 @@
         <% } %>
     </div>
 
-    <% if (video) { %>
-        <div class="action-buttons">
-            <button id="pass-btn" data-id="<%= video._id %>">❌</button>
-            <button id="like-btn" data-id="<%= video._id %>">❤️</button>
-        </div>
-    <% } %>
+    <!-- [삭제] 버튼 영역 제거 -->
 
     <script src="/js/main.js"></script>
 </body>
