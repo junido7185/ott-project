@@ -65,15 +65,21 @@ const getNextVideo = asyncHandler(async (req, res) => {
     const userId = req.session.user.id; // 세션 ID 사용
     const user = await User.findById(userId);
 
+    // [추가] 쿼리에서 OTT 필터 가져오기
+    const selectedOtt = req.query.ott;
+
     const seenVideos = [
         ...user.likedVideos, 
         ...user.passedVideos
     ];
 
-    // 아직 보지 않은 비디오 중 1개 찾기
-    const nextVideo = await Video.findOne({
-        _id: { $nin: seenVideos } // $nin: "not in" (이 배열에 포함되지 않은 것)
-    });
+    // [수정] OTT 필터 적용
+    const query = { _id: { $nin: seenVideos } };
+    if (selectedOtt) {
+        query.ottPlatform = selectedOtt;
+    }
+
+    const nextVideo = await Video.findOne(query);
 
     if (!nextVideo) {
         return res.status(404).json({ message: "더 이상 볼 비디오가 없습니다." });

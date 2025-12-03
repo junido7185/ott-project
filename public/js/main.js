@@ -46,7 +46,16 @@ async function handlePassClick(videoId) {
 // --- 다음 비디오 로드 및 화면 갱신 ---
 async function loadNextVideo() {
     try {
-        const response = await fetch("/api/videos/next");
+        // [추가] URL에서 OTT 파라미터 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedOtt = urlParams.get('ott');
+        
+        // [수정] API 호출 시 OTT 파라미터 포함
+        const apiUrl = selectedOtt 
+            ? `/api/videos/next?ott=${selectedOtt}` 
+            : `/api/videos/next`;
+            
+        const response = await fetch(apiUrl);
         const data = await response.json();
         const cardContainer = document.querySelector(".card-container");
 
