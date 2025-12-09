@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 // 비디오/콘텐츠 정보에 대한 Schema
 const videoSchema = new mongoose.Schema({
-    // [!!] TMDb의 고유 ID를 저장할 필드
+    // TMDb의 고유 ID를 저장할 필드
     tmdbId: {
         type: Number,
         required: true,
@@ -24,7 +24,13 @@ const videoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    genre: String
+    genre: String,
+
+    // [추가] 평점 (Vote Average)
+    rating: {
+        type: Number,
+        default: 0
+    }
 }, {
     timestamps: true
 });

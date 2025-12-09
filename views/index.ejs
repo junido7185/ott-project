@@ -24,6 +24,9 @@
                     <div class="metadata">
                         <span class="ott-tag"><%= video.ottPlatform %></span>
                         <span class="genre-tag"><%= video.genre %></span>
+                        <span class="rating-tag" style="color: #ffcc00; margin-left: 8px; font-weight: bold;">
+                            ★ <%= video.rating ? video.rating.toFixed(1) : '0.0' %>
+                        </span>
                     </div>
                     <hr class="info-divider">
                     <div class="description-wrapper">

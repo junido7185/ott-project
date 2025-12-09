@@ -178,7 +178,8 @@ const seedDatabase = asyncHandler(async (req, res) => {
                     description: movie.overview,
                     posterImageUrl: `http://image.tmdb.org/t/p/w500${movie.poster_path}`,
                     ottPlatform: provider.name, // [중요] 현재 루프의 OTT 이름(Netflix, Tving 등) 저장
-                    genre: genreNames
+                    genre: genreNames,
+                    rating: movie.vote_average // 평점 추가
                 };
 
                 // [기존 로직 유지] Mongoose "Upsert" (중복 방지: 있으면 수정, 없으면 추가)
@@ -189,7 +190,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
                 );
 
                 if (result.upsertedCount > 0) totalImported++;
-                else if (result.modifiedCount > 0) updatedCount++;
+                else if (result.modifiedCount > 0) totalUpdated++;
             }
         } catch (err) {
             console.error(`${provider.name} 데이터 시딩 중 에러:`, err);

@@ -83,7 +83,15 @@ async function loadNextVideo() {
             card.querySelector(".card-info h2").innerText = data.title;
             card.querySelector(".ott-tag").innerText = data.ottPlatform;
             card.querySelector(".genre-tag").innerText = data.genre;
-            
+
+            // [추가] 평점 텍스트 교체
+            const ratingEl = card.querySelector(".rating-tag");
+            if (ratingEl) {
+                // 데이터가 있으면 소수점 1자리, 없으면 0.0
+                const score = data.rating ? data.rating.toFixed(1) : '0.0';
+                ratingEl.innerText = `★ ${score}`;
+            }
+
             const descElement = card.querySelector(".description");
             descElement.innerText = data.description;
             descElement.classList.remove('expanded', 'truncated');
