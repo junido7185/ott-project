@@ -7,20 +7,22 @@ const {
     seedDatabase
 } = require("../controllers/videoController");
 const { createUser, likeVideo, passVideo, getLikedVideos } = require("../controllers/userController");
+const { createReview, getReviewsByVideo } = require("../controllers/reviewController"); // [추가]
 
 // --- Video Routes ---
-// 관리자용 비디오 생성 (수동)
-router.route("/videos").post(createVideo); // POST /api/videos
-// 관리자용 비디오 임포트 (자동)
-router.route("/admin/import").post(importVideoFromTmdb); // POST /api/admin/import
+router.route("/videos").post(createVideo);
+router.route("/admin/import").post(importVideoFromTmdb);
 router.route("/admin/seed").post(seedDatabase);
-// 사용자용 다음 비디오 가져오기
-router.route("/videos/next").get(getNextVideo); // GET /api/videos/next
+router.route("/videos/next").get(getNextVideo);
 
 // --- User Routes ---
-router.route("/users").post(createUser); // (테스트용) POST /api/users
-router.route("/users/:userId/like/:videoId").post(likeVideo); // POST /api/users/:userId/like/:videoId
-router.route("/users/:userId/pass/:videoId").post(passVideo); // POST /api/users/:userId/pass/:videoId
-router.route("/users/:userId/my-list").get(getLikedVideos); // GET /api/users/:userId/my-list
+router.route("/users").post(createUser);
+router.route("/users/:userId/like/:videoId").post(likeVideo);
+router.route("/users/:userId/pass/:videoId").post(passVideo);
+router.route("/users/:userId/my-list").get(getLikedVideos);
+
+// --- Review Routes (새로 추가) ---
+router.route("/reviews").post(createReview);
+router.route("/reviews/:videoId").get(getReviewsByVideo);
 
 module.exports = router;
