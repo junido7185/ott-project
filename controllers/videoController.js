@@ -128,17 +128,16 @@ const importVideoFromTmdb = asyncHandler(async (req, res) => {
     res.status(201).json(newVideo);
 });
 
-// @desc    (관리자용) TMDb "Discover"로 여러 OTT 콘텐츠 시딩
+// @desc    (관리자용) 각 OTT별로 100개씩 데이터 시딩
 // @route   POST /api/admin/seed
 const seedDatabase = asyncHandler(async (req, res) => {
     
-    // 1. 장르 맵 가져오기 (숫자 -> 텍스트 변환용)
     const genreMap = await getGenreMap();
 
-    // 2. 랜덤 페이지 선택 (1~10페이지 중 랜덤, 범위는 자유롭게 조절 가능)
-    const randomPage = Math.floor(Math.random() * 10) + 1;
+    // [설정] OTT별 목표 개수 (기본 100개)
+    // 쿼리로 ?limit=50 처럼 조절 가능
+    const limitPerProvider = parseInt(req.query.limit) || 100; 
 
-    // 3. [확장] 긁어올 OTT 목록 정의 (Netflix, Watcha, Tving, Wavve)
     const targetProviders = [
         { id: 8, name: "Netflix" },
         { id: 97, name: "Watcha" },
@@ -146,64 +145,72 @@ const seedDatabase = asyncHandler(async (req, res) => {
         { id: 356, name: "Wavve" }
     ];
 
-    let totalImported = 0;
-    let totalUpdated = 0;
+    let totalProcessed = 0;
 
-    // 4. 각 OTT별로 API 호출 (반복문 시작)
+    // 1. OTT별 루프
     for (const provider of targetProviders) {
-        // API 호출 URL 구성 (provider.id를 동적으로 삽입)
-        const tmdbUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=ko-KR&page=${randomPage}&with_watch_providers=${provider.id}&watch_region=KR&sort_by=popularity.desc`;
+        console.log(`[${provider.name}] 시딩 시작... (목표: ${limitPerProvider}개)`);
         
-        try {
-            const response = await fetch(tmdbUrl);
-            const data = await response.json();
+        let currentProviderCount = 0;
+        let currentPage = 1; // 1페이지부터 시작
 
-            if (!data.results) continue; // 결과가 없으면 다음 OTT로 넘어감
+        // 2. 목표 개수를 채울 때까지 페이지를 넘기며 반복 (최대 50페이지 안전장치)
+        while (currentProviderCount < limitPerProvider && currentPage < 50) {
+            
+            const tmdbUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=ko-KR&page=${currentPage}&with_watch_providers=${provider.id}&watch_region=KR&sort_by=popularity.desc`;
 
-            for (const movie of data.results) {
-                // [기존 로직 유지] 필터링: 설명이나 포스터가 없는 영화는 건너뛰기
-                if (!movie.overview || !movie.poster_path) {
-                    continue; 
+            try {
+                const response = await fetch(tmdbUrl);
+                const data = await response.json();
+
+                if (!data.results || data.results.length === 0) break; // 데이터 없으면 중단
+
+                // 3. 페이지 내의 영화 목록 반복
+                for (const movie of data.results) {
+                    // 목표 달성 시 즉시 중단
+                    if (currentProviderCount >= limitPerProvider) break;
+
+                    if (!movie.overview || !movie.poster_path) continue; 
+
+                    const genreNames = movie.genre_ids
+                        .map(id => genreMap[id] || "기타")
+                        .join(', ');
+
+                    const videoData = {
+                        tmdbId: movie.id,
+                        title: movie.title,
+                        description: movie.overview,
+                        posterImageUrl: `http://image.tmdb.org/t/p/w500${movie.poster_path}`,
+                        ottPlatform: provider.name,
+                        genre: genreNames,
+                        rating: movie.vote_average
+                    };
+
+                    await Video.updateOne(
+                        { tmdbId: movie.id },
+                        videoData,
+                        { upsert: true }
+                    );
+
+                    currentProviderCount++;
+                    totalProcessed++;
                 }
 
-                // [기존 로직 유지] 장르 ID 배열을 텍스트 문자열로 변환
-                const genreNames = movie.genre_ids
-                    .map(id => genreMap[id] || "기타")
-                    .join(', ');
+                console.log(`  - ${provider.name} : ${currentPage}페이지 완료 (현재 ${currentProviderCount}/${limitPerProvider})`);
+                currentPage++; // 다음 페이지로
 
-                // [기존 로직 유지 + 확장] 데이터 가공
-                const videoData = {
-                    tmdbId: movie.id,
-                    title: movie.title,
-                    description: movie.overview,
-                    posterImageUrl: `http://image.tmdb.org/t/p/w500${movie.poster_path}`,
-                    ottPlatform: provider.name, // [중요] 현재 루프의 OTT 이름(Netflix, Tving 등) 저장
-                    genre: genreNames,
-                    rating: movie.vote_average // 평점 추가
-                };
-
-                // [기존 로직 유지] Mongoose "Upsert" (중복 방지: 있으면 수정, 없으면 추가)
-                const result = await Video.updateOne(
-                    { tmdbId: movie.id },
-                    videoData,
-                    { upsert: true }
-                );
-
-                if (result.upsertedCount > 0) totalImported++;
-                else if (result.modifiedCount > 0) totalUpdated++;
+            } catch (err) {
+                console.error(`API 호출 에러 (${provider.name}):`, err);
+                break; 
             }
-        } catch (err) {
-            console.error(`${provider.name} 데이터 시딩 중 에러:`, err);
-            // 한 OTT에서 에러가 나도 나머지는 계속 진행하도록 continue 처리
-            continue;
         }
+        console.log(`[${provider.name}] 완료. 총 ${currentProviderCount}개 저장됨.\n`);
     }
 
-    // 5. 최종 결과 응답
     res.status(201).json({
-        message: `데이터 시딩 완료! (페이지: ${randomPage})`,
-        details: `총 ${totalImported}개 추가됨, ${totalUpdated}개 업데이트됨`,
-        providers: targetProviders.map(p => p.name) // 어떤 OTT를 긁었는지 정보 제공
+        message: `대규모 데이터 시딩 완료!`,
+        details: `총 ${totalProcessed}개의 데이터가 처리되었습니다. (각 OTT별 최대 ${limitPerProvider}개)`,
+        providers: targetProviders.map(p => p.name)
     });
 });
 
