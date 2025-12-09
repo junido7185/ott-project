@@ -11,12 +11,45 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
+    padding: 15px 20px; /* 패딩 살짝 키움 */
     background-color: #141414;
     border-bottom: 1px solid #333;
+    z-index: 100; /* 카드가 헤더 위로 안 올라오게 */
+    position: relative;
 }
 header h1 { font-size: 24px; margin: 0; }
 header a { color: #fff; text-decoration: none; font-size: 16px; }
+
+/* [추가] 헤더 내비게이션 그룹 */
+.header-nav {
+    display: flex;
+    gap: 20px; /* 버튼 사이 간격 */
+    align-items: center;
+}
+
+/* [추가] 헤더 링크 스타일 통일 */
+.nav-link {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #fff; /* 마우스 올리면 흰색으로 */
+}
+
+/* 마이리스트 페이지의 단일 링크 대응 (my-list.ejs의 a 태그) */
+header > a {
+    color: #ccc;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+}
+header > a:hover {
+    color: #fff;
+}
 
 /* [수정] 카드 컨테이너 높이 확대 */
 .card-container {
