@@ -1,38 +1,52 @@
 const express = require("express");
 const router = express.Router();
+
+// VideoController에서 import
 const { 
     createVideo, 
     getNextVideo,
     importVideoFromTmdb,
     seedDatabase,
-    searchVideos  // [추가]
+    searchVideos
 } = require("../controllers/videoController");
-const { createUser, likeVideo, passVideo, getLikedVideos } = require("../controllers/userController");
-const { createReview, 
-        getReviewsByVideo, 
-        getMyReviews, 
-        updateReview, 
-        deleteReview 
-} = require("../controllers/reviewController"); // [추가]
+
+// UserController에서 import
+const { 
+    createUser, 
+    likeVideo, 
+    passVideo, 
+    getLikedVideos, 
+    setNickname
+} = require("../controllers/userController");
+
+// ReviewController에서 import
+const { 
+    createReview, 
+    getReviewsByVideo, 
+    getMyReviews, 
+    updateReview, 
+    deleteReview 
+} = require("../controllers/reviewController");
 
 // --- Video Routes ---
 router.route("/videos").post(createVideo);
 router.route("/admin/import").post(importVideoFromTmdb);
 router.route("/admin/seed").post(seedDatabase);
 router.route("/videos/next").get(getNextVideo);
-router.route("/videos/search").get(searchVideos); // [추가]
+router.route("/videos/search").get(searchVideos);
 
 // --- User Routes ---
 router.route("/users").post(createUser);
 router.route("/users/:userId/like/:videoId").post(likeVideo);
 router.route("/users/:userId/pass/:videoId").post(passVideo);
 router.route("/users/:userId/my-list").get(getLikedVideos);
+router.route("/users/set-nickname").post(setNickname);  // 👈 31번 줄 근처
 
-// --- Review Routes (새로 추가) ---
+// --- Review Routes ---
 router.route("/reviews").post(createReview);
-router.route("/reviews/my").get(getMyReviews);               // [추가]
+router.route("/reviews/my").get(getMyReviews);
 router.route("/reviews/:videoId").get(getReviewsByVideo);
-router.route("/reviews/:reviewId").put(updateReview);        // [추가]
-router.route("/reviews/:reviewId").delete(deleteReview);     // [추가]
+router.route("/reviews/:reviewId").put(updateReview);
+router.route("/reviews/:reviewId").delete(deleteReview);
 
 module.exports = router;

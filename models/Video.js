@@ -30,6 +30,14 @@ const videoSchema = new mongoose.Schema({
     rating: {
         type: Number,
         default: 0
+    },
+    ourRating: {  // [추가] 사이트 평균 평점
+        type: Number,
+        default: 0
+    },
+    reviewCount: {  // [추가] 리뷰 개수
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

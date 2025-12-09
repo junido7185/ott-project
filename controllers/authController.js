@@ -61,12 +61,13 @@ const loginUser = asyncHandler(async (req, res) => {
         // 세션에 유저 정보 저장
         req.session.user = {
             id: user._id,
-            username: user.username
+            username: user.username,
+            nickname: user.nickname || null  // [추가] 닉네임
         };
         
         // [수정] 로그인 성공 시 OTT 선택 페이지로 이동
         req.session.save(() => {
-            res.redirect("/select"); // 변경된 부분
+            res.redirect("/select-ott"); // 변경된 부분
         });
     } else {
         res.status(401).send("아이디 또는 비밀번호가 일치하지 않습니다.");

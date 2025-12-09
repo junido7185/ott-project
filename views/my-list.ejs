@@ -9,7 +9,8 @@
         /* 버블 컨테이너 */
         .genre-bubbles {
             position: relative;
-            width: 100%;
+            width: 70%;
+            margin: 0 auto;
             height: 80vh;
             overflow: hidden;
             display: flex;
@@ -291,21 +292,31 @@
 <body>
     <header>
         <h1>OTT-Swipe</h1>
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <a href="/">스와이프 하러가기</a>
+
+        <nav style="flex: 1; display: flex; justify-content: center;">
             <a href="/search">영화 검색</a>
+          </nav>
+
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <a href="/main">스와이프 하러가기</a>
             <a href="/my-reviews">내 한줄평 보기</a>
         </div>
     </header>
 
-    <div class="list-page-container">
-        <h2>My Liked Videos by Genre</h2>
-        <hr>
-
+    <div class="mylist-header-row">
+        <h2 id="list-title">My Liked Videos by Genre</h2>
+        <a id="toggle-view-btn" class="toggle-view-link">전체 보기</a>
+      </div>
+      <hr class="mylist-divider">
+      
         <script type="application/json" id="videos-data">
             <%- JSON.stringify(videos) %>
         </script>
 
+        <!-- 전체 좋아요 영상 리스트 (초기에는 숨김) -->
+        <div id="all-videos-container" style="display:none; margin-top: 20px;">
+            <div id="all-videos-list" class="all-videos-list"></div>
+        </div>
         <div class="genre-bubbles" id="genre-bubbles">
             <!-- JavaScript로 동적 생성 -->
         </div>
@@ -596,6 +607,60 @@
                 closeModal();
             }
         });
+        // 전체 리스트 렌더링
+        function renderAllVideos() {
+        const container = document.getElementById('all-videos-list');
+        if (!videos || videos.length === 0) {
+            container.innerHTML = '<p class="empty-message">아직 좋아요를 누른 영상이 없습니다.</p>';
+            return;
+        }
+
+        container.innerHTML = videos.map((v, idx) => `
+    <div class="all-video-card" data-index="${idx}">
+      <img src="${v.posterImageUrl}" alt="${v.title}" class="all-video-poster">
+    </div>
+  `).join('');
+
+  // 카드 클릭 시 모달(설명 + 한줄평) 열기
+  document.querySelectorAll('.all-video-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const index = parseInt(card.dataset.index, 10);
+      currentGenre = 'ALL';
+      currentGenreVideos = videos;
+      currentVideoIndex = index;
+      document.getElementById('video-modal').classList.add('active');
+      showCurrentVideo();   // 기존 함수 사용
+    });
+  });
+}
+
+const toggleBtn = document.getElementById('toggle-view-btn');
+  const listTitle = document.getElementById('list-title');
+  const genreBubbles = document.getElementById('genre-bubbles');
+  const allVideosContainer = document.getElementById('all-videos-container');
+  const emptyMessage = document.getElementById('empty-message');
+
+  let currentView = 'genre';
+
+  toggleBtn.addEventListener('click', () => {
+    if (currentView === 'genre') {
+      currentView = 'all';
+      listTitle.textContent = 'My Liked Videos - All';
+      toggleBtn.textContent = '장르 보기';
+      genreBubbles.style.display = 'none';
+      if (emptyMessage) emptyMessage.style.display = 'none';
+      allVideosContainer.style.display = 'block';
+      renderAllVideos();
+    } else {
+      currentView = 'genre';
+      listTitle.textContent = 'My Liked Videos by Genre';
+      toggleBtn.textContent = '전체 보기';
+      genreBubbles.style.display = 'block';
+      allVideosContainer.style.display = 'none';
+    }
+  });
+
     </script>
+    <a href="/logout" class="logout-btn">로그아웃</a>
 </body>
 </html>
