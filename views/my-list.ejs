@@ -287,6 +287,25 @@
             color: #888;
             font-size: 18px;
         }
+        
+        .our-rating-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        }
+
+        .our-rating-label {
+        color: #e50914;
+        font-weight: bold;
+        }
+
+        .our-rating-value {
+        color: #ffcc00;
+        font-weight: bold;
+        font-size: 14px;
+        }
+
     </style>
 </head>
 <body>
@@ -343,8 +362,14 @@
 
             <!-- 한줄평 패널 -->
             <div class="review-panel">
-                <h3>한줄평</h3>
+                <!-- 🔹 our rating 표시 영역 -->
+                <div class="our-rating-row">
+                    <span class="our-rating-label">our rating</span>
+                    <span class="our-rating-value" id="our-rating-text">-.-점 (0명 참여)</span>
+                </div>
                 
+                <h3 style="margin-top: 24px;">한줄평</h3>
+
                 <div class="review-form">
                     <div class="rating-input">
                         <input type="radio" name="rating" id="star5" value="5">
@@ -352,20 +377,23 @@
                         <input type="radio" name="rating" id="star3" value="3">
                         <input type="radio" name="rating" id="star2" value="2">
                         <input type="radio" name="rating" id="star1" value="1">
-                        <label for="star5">★</label>
-                        <label for="star4">★</label>
-                        <label for="star3">★</label>
-                        <label for="star2">★</label>
+                      
+                        <!-- ⭐ label에 공통 클래스 'rating-star' 추가 -->
                         <label for="star1">★</label>
-                    </div>
-                    <textarea id="review-comment" placeholder="한줄평을 작성하세요 (최대 200자)"></textarea>
+                        <label for="star2">★</label>
+                        <label for="star3">★</label>
+                        <label for="star4">★</label>
+                        <label for="star5">★</label>
+                      </div>
+                    
+                    <textarea id="review-comment" 
+                        placeholder="한줄평을 작성하세요 (최대 200자)"></textarea>
                     <button onclick="submitReview()">등록</button>
                 </div>
-
-                <div class="review-list" id="review-list">
-                    <!-- 리뷰 목록 -->
-                </div>
+            
+                <div class="review-list" id="review-list"></div>
             </div>
+        
         </div>
     </div>
 
@@ -501,6 +529,18 @@
                 </div>
             `;
 
+            // 🔹 our rating 표시 갱신
+  const ourRatingText = document.getElementById('our-rating-text');
+  if (ourRatingText) {
+    const avg = video.ourRating || 0;
+    const count = video.reviewCount || 0;
+    if (count === 0) {
+      ourRatingText.textContent = '아직 평점이 없습니다.';
+    } else {
+      ourRatingText.textContent = `${avg.toFixed(1)}점 (${count}명 참여)`;
+    }
+  }
+
             loadReviews(video._id);
         }
 
@@ -600,7 +640,6 @@
 
         // 초기화
         renderBubbles();
-
         // 모달 외부 클릭 시 닫기
         document.getElementById('video-modal').addEventListener('click', (e) => {
             if (e.target.id === 'video-modal') {
