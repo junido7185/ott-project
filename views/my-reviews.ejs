@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 한줄평 - OTT-Swipe</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .reviews-container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .review-card {
+            background: #2f2f2f;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .review-card img {
+            width: 120px;
+            height: auto;
+            border-radius: 8px;
+        }
+        .review-content {
+            flex: 1;
+        }
+        .review-content h3 {
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+        .review-content .rating {
+            color: #ffcc00;
+            font-size: 18px;
+        }
+        .review-content .comment {
+            color: #ccc;
+            margin: 10px 0;
+        }
+        .review-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .review-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background: #4caf50;
+            color: #fff;
+        }
+        .btn-delete {
+            background: #f44336;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>OTT-Swipe</h1>
+        <div style="display: flex; gap: 20px;">
+            <a href="/">스와이프 하러가기</a>
+            <a href="/search">🔍 영화 검색</a>
+            <a href="/my-list">My List</a>
+        </div>
+    </header>
+
+    <div class="reviews-container">
+        <h2 style="color: #fff;">내 한줄평</h2>
+        <hr style="border: 0; border-top: 1px solid #444; margin-bottom: 30px;">
+        
+        <div id="reviews-list"></div>
+    </div>
+
+    <script>
+        async function loadMyReviews() {
+            try {
+                const response = await fetch('/api/reviews/my');
+                const reviews = await response.json();
+
+                const container = document.getElementById('reviews-list');
+                if (reviews.length === 0) {
+                    container.innerHTML = '<p style="color: #888; text-align: center;">작성한 한줄평이 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = reviews.map(review => `
+                    <div class="review-card">
+                        <img src="${review.videoId.posterImageUrl}" alt="${review.videoId.title}">
+                        <div class="review-content">
+                            <h3>${review.videoId.title}</h3>
+                            <div class="rating">${'★'.repeat(review.rating)}</div>
+                            <p class="comment">${review.comment}</p>
+                            <p style="color: #888; font-size: 12px;">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
+                            <div class="review-actions">
+                                <button class="btn-edit" onclick='editReview("${review._id}", ${review.rating}, "${review.comment}")'>수정</button>
+                                <button class="btn-delete" onclick='deleteReview("${review._id}")'>삭제</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('리뷰 로드 실패:', err);
+            }
+        }
+
+        function editReview(reviewId, currentRating, currentComment) {
+            const newRating = prompt(`별점을 입력하세요 (1-5):`, currentRating);
+            if (!newRating || newRating < 1 || newRating > 5) return;
+
+            const newComment = prompt(`한줄평을 수정하세요:`, currentComment);
+            if (!newComment) return;
+
+            fetch(`/api/reviews/${reviewId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: parseInt(newRating), comment: newComment })
+            }).then(() => {
+                alert('수정되었습니다!');
+                loadMyReviews();
+            });
+        }
+
+        function deleteReview(reviewId) {
+            if (!confirm('정말 삭제하시겠습니까?')) return;
+
+            fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' })
+                .then(() => {
+                    alert('삭제되었습니다!');
+                    loadMyReviews();
+                });
+        }
+
+        loadMyReviews();
+    </script>
+</body>
+</html>

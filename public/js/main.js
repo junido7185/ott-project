@@ -82,7 +82,6 @@ async function loadNextVideo() {
             card.querySelector(".card-image img").src = data.posterImageUrl;
             card.querySelector(".card-info h2").innerText = data.title;
             card.querySelector(".ott-tag").innerText = data.ottPlatform;
-            card.querySelector(".genre-tag").innerText = data.genre;
 
             // [추가] 평점 텍스트 교체
             const ratingEl = card.querySelector(".rating-tag");
@@ -91,6 +90,7 @@ async function loadNextVideo() {
                 const score = data.rating ? data.rating.toFixed(1) : '0.0';
                 ratingEl.innerText = `★ ${score}`;
             }
+
 
             const descElement = card.querySelector(".description");
             descElement.innerText = data.description;

@@ -58,4 +58,28 @@ const renderMyListPage = asyncHandler(async (req, res) => {
     });
 });
 
-module.exports = { renderMainPage, renderMyListPage, renderSelectOttPage };
+// @desc    검색 페이지 렌더링
+// @route   GET /search
+const renderSearchPage = (req, res) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+    res.render("search", { user: req.session.user });
+};
+
+// @desc    내 리뷰 페이지 렌더링
+// @route   GET /my-reviews
+const renderMyReviewsPage = (req, res) => {
+    if (!req.session.user) {
+        return res.redirect("/login");
+    }
+    res.render("my-reviews", { user: req.session.user });
+};
+
+module.exports = { 
+    renderMainPage, 
+    renderMyListPage, 
+    renderSelectOttPage,
+    renderSearchPage,      // [추가]
+    renderMyReviewsPage    // [추가]
+};

@@ -138,6 +138,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
     // 쿼리로 ?limit=50 처럼 조절 가능
     const limitPerProvider = parseInt(req.query.limit) || 100; 
 
+
     const targetProviders = [
         { id: 8, name: "Netflix" },
         { id: 97, name: "Watcha" },
@@ -150,7 +151,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
     // 1. OTT별 루프
     for (const provider of targetProviders) {
         console.log(`[${provider.name}] 시딩 시작... (목표: ${limitPerProvider}개)`);
-        
+
         let currentProviderCount = 0;
         let currentPage = 1; // 1페이지부터 시작
 
@@ -195,7 +196,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
                     currentProviderCount++;
                     totalProcessed++;
                 }
-
+                
                 console.log(`  - ${provider.name} : ${currentPage}페이지 완료 (현재 ${currentProviderCount}/${limitPerProvider})`);
                 currentPage++; // 다음 페이지로
 
@@ -207,6 +208,7 @@ const seedDatabase = asyncHandler(async (req, res) => {
         console.log(`[${provider.name}] 완료. 총 ${currentProviderCount}개 저장됨.\n`);
     }
 
+   
     res.status(201).json({
         message: `대규모 데이터 시딩 완료!`,
         details: `총 ${totalProcessed}개의 데이터가 처리되었습니다. (각 OTT별 최대 ${limitPerProvider}개)`,
@@ -214,10 +216,28 @@ const seedDatabase = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    영화 검색
+// @route   GET /api/videos/search?q=검색어
+const searchVideos = asyncHandler(async (req, res) => {
+    const { q } = req.query;
+    
+    if (!q || q.trim() === '') {
+        return res.status(400).json({ message: "검색어를 입력하세요." });
+    }
+
+    // 제목으로 검색 (대소문자 구분 없이)
+    const videos = await Video.find({
+        title: { $regex: q, $options: 'i' }
+    }).limit(20);
+
+    res.status(200).json(videos);
+});
+
 // module.exports에 seedDatabase가 포함되어 있는지 확인
 module.exports = { 
     createVideo, 
     getNextVideo,
     importVideoFromTmdb,
-    seedDatabase
+    seedDatabase,
+    searchVideos // [추가]
 };
