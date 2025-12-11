@@ -101,6 +101,16 @@ header > a:hover {
 
 .card-info {
     padding: 20px;
+    overflow-y: auto; /* 스크롤 기능 유지 */
+    
+    /* 1. Chrome, Safari, Opera (Webkit) */
+    &::-webkit-scrollbar {
+        display: none; 
+    }
+    
+    /* 2. Firefox, IE, Edge */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
 .card-info h2 {
     margin: 0 0 10px 0;
