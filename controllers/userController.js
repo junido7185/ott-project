@@ -55,44 +55,36 @@ const getLikedVideos = asyncHandler(async (req, res) => {
 // 닉네임 설정
 const setNickname = asyncHandler(async (req, res) => {
     const { nickname } = req.body;
+    const userId = req.session.user.id;
 
-    if (!req.session.user) {
-        return res.status(401).json({ message: "로그인이 필요합니다." });
+    if (!nickname) {
+        return res.status(400).json({ message: "닉네임을 입력해주세요." });
     }
 
-    if (!nickname || nickname.trim() === '') {
-        return res.status(400).json({ message: "닉네임을 입력하세요." });
-    }
-
-    // 중복 체크
-    const existing = await User.findOne({ nickname: nickname.trim() });
-    if (existing && existing._id.toString() !== req.session.user.id) {
-        return res.status(400).json({ message: "이미 사용 중인 닉네임입니다." });
-    }
-
-    const user = await User.findByIdAndUpdate(
-        req.session.user.id,
-        { nickname: nickname.trim() },
-        { new: true }
+    // 1. DB 업데이트
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { nickname: nickname },
+        { new: true } // 업데이트된 정보 반환
     );
 
-    // 세션 업데이트
-    req.session.user.nickname = user.nickname;
-
-    // 기존 리뷰의 username도 모두 업데이트
-    await Review.updateMany(
-        { userId: user._id },
-        { username: user.nickname }
-    );
-
-    res.status(200).json({ message: "닉네임이 설정되었습니다.", nickname: user.nickname });
+    // 2. 세션 정보도 업데이트 (중요: 그래야 새로고침해도 유지됨)
+    req.session.user.nickname = updatedUser.nickname;
+    
+    // 세션 저장 후 응답
+    req.session.save(() => {
+        res.status(200).json({ 
+            message: "닉네임이 변경되었습니다.", 
+            nickname: updatedUser.nickname 
+        });
+    });
 });
 
-// 👇 여기가 중요! 모든 함수를 export 해야 합니다
+// 모든 함수를 export 하는거 잊지 않기
 module.exports = { 
     createUser, 
     likeVideo, 
     passVideo, 
     getLikedVideos,
-    setNickname  // 이게 있어야 합니다!
+    setNickname
 };

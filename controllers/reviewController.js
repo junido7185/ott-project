@@ -11,17 +11,18 @@ const createReview = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: "로그인이 필요합니다." });
     }
 
+    // 닉네임이 있으면 닉네임 사용, 없으면 username 사용
     const displayName = req.session.user.nickname || req.session.user.username;
     
     const review = await Review.create({
         videoId,
         userId: req.session.user.id,
-        username: req.session.user.username,
+        username: displayName,
         rating,
         comment
     });
 
-    // [추가] 평균 평점 업데이트
+    // 평균 평점 업데이트
     await updateVideoRating(videoId);
 
     res.status(201).json(review);

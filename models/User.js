@@ -6,10 +6,9 @@ const userSchema = new mongoose.Schema({
         required: [true, "아이디를 입력해주세요."],
         unique: true
     },
-    nickname: {  // [추가] 닉네임
+    nickname: {
         type: String,
-        unique: true,
-        sparse: true  // null 허용하면서 unique
+        default: null
     },
     password: {
         type: String,

@@ -37,10 +37,11 @@ router.route("/videos/search").get(searchVideos);
 
 // --- User Routes ---
 router.route("/users").post(createUser);
+router.route("/users/set-nickname").post(setNickname);
+
+router.route("/users/:userId/my-list").get(getLikedVideos);
 router.route("/users/:userId/like/:videoId").post(likeVideo);
 router.route("/users/:userId/pass/:videoId").post(passVideo);
-router.route("/users/:userId/my-list").get(getLikedVideos);
-router.route("/users/set-nickname").post(setNickname);  // 👈 31번 줄 근처
 
 // --- Review Routes ---
 router.route("/reviews").post(createReview);

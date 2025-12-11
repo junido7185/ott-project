@@ -2,72 +2,55 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>닉네임 설정 - OTT-Swipe</title>
+    <title>닉네임 설정 - OTT Swipe</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
     <header>
-        <h1>OTT-Swipe</h1>
+        <h1><a href="/select" style="text-decoration:none; color:inherit;">OTT-Swipe</a></h1>
         <div class="header-nav">
-            <a href="/main" class="nav-link">스와이프</a>
-            <a href="/my-reviews" class="nav-link">내 한줄평</a>
             <a href="/my-list" class="nav-link">My List</a>
         </div>
     </header>
 
-    <div class="nickname-page-container">
+    <div class="list-page-container" style="max-width: 500px; margin-top: 50px;">
         <h2>닉네임 설정</h2>
-        <p class="info-text">현재: <strong><%= user.nickname || user.username %></strong></p>
-        <p class="info-text">닉네임을 설정하면 기존에 작성한 모든 한줄평도 변경됩니다.</p>
-        <hr>
-        
-        <form id="nicknameForm">
-            <input type="text" id="nicknameInput" placeholder="새로운 닉네임" required maxlength="20">
-            <button type="submit">설정하기</button>
+        <p style="color: #ccc; margin-bottom: 30px;">
+            현재 닉네임: <strong style="color: #e50914;"><%= user.nickname || user.username %></strong>
+        </p>
+
+        <form id="nickname-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" id="nickname" placeholder="새로운 닉네임 입력 (최대 10자)" maxlength="10" required 
+                   style="padding: 15px; border-radius: 8px; border: none; background: #333; color: white;">
+            
+            <button type="submit" class="btn" style="background: #e50914; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                변경하기
+            </button>
         </form>
-        
-        <div id="message"></div>
     </div>
 
-    <a href="/logout" class="logout-btn">로그아웃</a>
-
     <script>
-        document.getElementById('nicknameForm').addEventListener('submit', async (e) => {
+        document.getElementById('nickname-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const nickname = document.getElementById('nicknameInput').value.trim();
-            const messageDiv = document.getElementById('message');
-            
-            if (!nickname) {
-                messageDiv.textContent = '닉네임을 입력하세요.';
-                messageDiv.className = 'error-message';
-                return;
-            }
-            
+            const nickname = document.getElementById('nickname').value;
+
             try {
-                const response = await fetch('/api/users/set-nickname', {
+                const response = await fetch('/api/users/nickname', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nickname })
                 });
-                
+
                 const data = await response.json();
-                
                 if (response.ok) {
-                    messageDiv.textContent = data.message;
-                    messageDiv.className = 'success-message';
-                    setTimeout(() => {
-                        window.location.href = '/my-reviews';
-                    }, 1500);
+                    alert(data.message);
+                    window.location.href = "/my-list"; // 변경 후 마이리스트로 이동
                 } else {
-                    messageDiv.textContent = data.message;
-                    messageDiv.className = 'error-message';
+                    alert(data.message || "오류가 발생했습니다.");
                 }
-            } catch (error) {
-                console.error('닉네임 설정 실패:', error);
-                messageDiv.textContent = '오류가 발생했습니다.';
-                messageDiv.className = 'error-message';
+            } catch (err) {
+                console.error(err);
+                alert("서버 통신 오류");
             }
         });
     </script>
