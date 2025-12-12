@@ -19,7 +19,10 @@ const renderMainPage = asyncHandler(async (req, res) => {
     const userId = req.session.user.id;
     const user = await User.findById(userId);
 
-    const selectedOtt = req.query.ott;
+    const selectedOtt = req.query.ott;    
+    if (selectedOtt) {
+        req.session.lastOtt = selectedOtt;
+    }
 
     const seenVideos = [...user.likedVideos, ...user.passedVideos];
 
@@ -47,7 +50,8 @@ const renderMyListPage = asyncHandler(async (req, res) => {
 
     res.render("my-list", {
         videos: user.likedVideos,
-        user: user
+        user: user,
+        lastOtt: req.session.lastOtt || null 
     });
 });
 
