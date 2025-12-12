@@ -15,6 +15,6 @@ router.route("/select-ott").get(renderSelectOttPage); // GET /select-ott
 router.route("/my-list").get(renderMyListPage); // GET /my-list
 router.route("/search").get(renderSearchPage);
 router.route("/my-reviews").get(renderMyReviewsPage);
-router.get("/set-nickname", renderSetNicknamePage);
+router.route("/set-nickname").get(renderSetNicknamePage);
 
 module.exports = router;
