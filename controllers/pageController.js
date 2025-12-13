@@ -105,7 +105,11 @@ const renderMyReviewsPage = (req, res) => {
     if (!req.session.user) {
         return res.redirect("/login");
     }
-    res.render("my-reviews", { user: req.session.user });
+    const lastOtt = req.session.lastOtt;
+    if (!lastOtt) {
+        return res.status(400).send('lastOtt 값이 없습니다.');
+    }
+    res.render("my-reviews", { user: req.session.user, lastOtt });
 };
 
 // 닉네임 설정 페이지 렌더링
