@@ -35,7 +35,7 @@
             const nickname = document.getElementById('nickname').value;
 
             try {
-                const response = await fetch('/api/users/nickname', {
+                const response = await fetch('/api/users/set-nickname', { 
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nickname })

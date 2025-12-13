@@ -508,29 +508,76 @@ header > a:hover {
     margin-bottom: 20px;
   }
   
-  .rating-input {
+/* --- [Final] 별점 시스템 (SVG Mask 기법 - 완벽한 모양 보장) --- */
+.rating-input {
     display: flex;
-    gap: 10px;
+    flex-direction: row-reverse; /* 5점 -> 0.5점 순서 */
+    justify-content: center;
+    align-items: center;
+    gap: 0; /* 물리적 간격 제거 */
     margin: 10px 0;
-  }
-  
-  .rating-input input[type="radio"] {
-    display: none;
-  }
-  
-  .rating-input label {
-    font-size: 30px;
-    color: #555;
+}
+
+/* 라디오 버튼 숨김 */
+.rating-input input {
+    display: none !important;
+}
+
+/* 별의 '반쪽'을 담을 컨테이너 (15px) */
+.rating-input label {
+    width: 15px; /* 정확히 30px의 절반 */
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden; /* 넘치는 부분 잘라냄 (핵심) */
     cursor: pointer;
-    transition: color 0.2s;
-  }
-  
-  .rating-input input[type="radio"]:checked ~ label,
-  .rating-input label:hover,
-  .rating-input label:hover ~ label {
-    color: #ffcc00;
-  }
-  
+    position: relative;
+}
+
+/* [핵심] 폰트 대신 SVG를 배경으로 사용하여 모양을 그림 */
+.rating-input label::before {
+    content: ''; 
+    position: absolute;
+    width: 30px; /* 별 전체 크기 */
+    height: 30px;
+    top: 0;
+    
+    /* 기본 배경색 (회색) */
+    background-color: #ddd; 
+    
+    /* SVG로 별 모양 마스크(Mask) 생성 */
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z'/%3E%3C/svg%3E");
+    
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain; /* 30px 박스에 꽉 차게 */
+    mask-size: contain;
+
+    transition: background-color 0.2s;
+}
+
+/* [.star-L] 왼쪽 반쪽 (x.5점) */
+/* 별(30px)을 그대로 둬서 왼쪽 15px만 창문에 보이게 함 */
+.rating-input label.star-L::before {
+    left: 0; 
+}
+
+/* [.star-R] 오른쪽 반쪽 (x.0점) */
+/* 별(30px)을 왼쪽으로 15px 당겨서 오른쪽 15px만 창문에 보이게 함 */
+.rating-input label.star-R::before {
+    left: -15px; 
+}
+
+/* [선택/호버 효과] 배경색을 빨강으로 변경 (마스크 안쪽만 색칠됨) */
+.rating-input input:checked ~ label::before,
+.rating-input label:hover ~ label::before,
+.rating-input label:hover::before {
+    background-color: #e50914; /* 넷플릭스 레드 */
+}
+
   .review-form textarea {
     width: 100%;
     height: 60px;
@@ -565,3 +612,24 @@ header > a:hover {
     overflow-y: auto;
   }
   
+/* [추가] 모달 내 이미지 강제 스타일 */
+.video-slider img {
+    width: 100%;
+    height: auto;
+    min-height: 400px; /* 높이 강제 확보 */
+    object-fit: cover; /* 비율 유지하며 꽉 채움 */
+    display: block;
+    background-color: #000; /* 이미지가 없을 때 검은색 배경 */
+}
+
+  /* 사이트 전체 스크롤바 숨기기 (모든 요소 적용) */
+* {
+    /* Chrome, Safari, Opera */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    /* IE, Edge */
+    -ms-overflow-style: none;
+    /* Firefox */
+    scrollbar-width: none;
+}
