@@ -187,7 +187,27 @@ async function loadNextVideo() {
 
             card.querySelector(".card-image img").src = data.posterImageUrl;
             card.querySelector(".card-info h2").innerText = data.title;
-            card.querySelector(".ott-tag").innerText = data.ottPlatform;
+            
+            const ottTag = card.querySelector(".ott-tag");
+            // 1. 텍스트 뒤에 화살표 추가 (링크라는 힌트)
+            ottTag.innerText = `${data.ottPlatform} ↗`; 
+            
+            // 2. 마우스 커서를 손가락 모양으로 변경
+            ottTag.style.cursor = "pointer";
+            
+            // 3. 클릭 이벤트 연결
+            ottTag.onclick = (e) => {
+                // 중요: 카드를 잡고 드래그하는 스와이프 동작이 발생하지 않도록 막음
+                e.stopPropagation(); 
+                
+                // 새 탭에서 검색 결과 열기
+                const link = getOttLink(data.ottPlatform, data.title);
+                if (link !== '#') {
+                    window.open(link, '_blank');
+                } else {
+                    alert("지원하지 않는 플랫폼입니다.");
+                }
+            };
 
             const ratingEl = card.querySelector(".rating-tag");
             if (ratingEl) {
@@ -402,4 +422,16 @@ function initSwipe() {
     card.addEventListener('touchstart', startDrag);
     document.addEventListener('touchmove', moveDrag);
     document.addEventListener('touchend', endDrag);
+}
+
+// OTT 바로가기 링크 생성 함수
+function getOttLink(platform, title) {
+    const query = encodeURIComponent(title);
+    switch (platform.toLowerCase()) {
+        case 'netflix': return `https://www.netflix.com/search?q=${query}`;
+        case 'watcha': return `https://watcha.com/search?query=${query}`;
+        case 'tving': return `https://www.tving.com/search/total?keyword=${query}`;
+        case 'wavve': return `https://www.wavve.com/search/search?searchWord=${query}`;
+        default: return '#';
+    }
 }

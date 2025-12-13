@@ -173,29 +173,6 @@
             margin-bottom: 20px;
         }
 
-        .rating-input {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .rating-input input[type="radio"] {
-            display: none;
-        }
-
-        .rating-input label {
-            font-size: 30px;
-            color: #555;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .rating-input input[type="radio"]:checked ~ label,
-        .rating-input label:hover,
-        .rating-input label:hover ~ label {
-            color: #ffcc00;
-        }
-
         .review-form textarea {
             width: 100%;
             height: 60px;
@@ -364,9 +341,9 @@
 
             <!-- 한줄평 패널 -->
             <div class="review-panel">
-                <!-- 🔹 our rating 표시 영역 -->
+                <!-- 🔹 사이트 내 평점 표시 영역 -->
                 <div class="our-rating-row">
-                    <span class="our-rating-label">our rating</span>
+                    <span class="our-rating-label">사이트 내 평점</span>
                     <span class="our-rating-value" id="our-rating-text">-.-점 (0명 참여)</span>
                 </div>
                 
@@ -374,19 +351,36 @@
 
                 <div class="review-form">
                     <div class="rating-input">
-                        <input type="radio" name="rating" id="star5" value="5">
-                        <input type="radio" name="rating" id="star4" value="4">
-                        <input type="radio" name="rating" id="star3" value="3">
-                        <input type="radio" name="rating" id="star2" value="2">
-                        <input type="radio" name="rating" id="star1" value="1">
-                      
-                        <!-- ⭐ label에 공통 클래스 'rating-star' 추가 -->
-                        <label for="star1">★</label>
-                        <label for="star2">★</label>
-                        <label for="star3">★</label>
-                        <label for="star4">★</label>
-                        <label for="star5">★</label>
-                      </div>
+                    <input type="radio" name="rating" id="star5" value="5">
+                    <label for="star5" class="star-R" title="5.0점"></label>
+                    
+                    <input type="radio" name="rating" id="star4.5" value="4.5">
+                    <label for="star4.5" class="star-L" title="4.5점"></label>
+
+                    <input type="radio" name="rating" id="star4" value="4">
+                    <label for="star4" class="star-R" title="4.0점"></label>
+
+                    <input type="radio" name="rating" id="star3.5" value="3.5">
+                    <label for="star3.5" class="star-L" title="3.5점"></label>
+
+                    <input type="radio" name="rating" id="star3" value="3">
+                    <label for="star3" class="star-R" title="3.0점"></label>
+
+                    <input type="radio" name="rating" id="star2.5" value="2.5">
+                    <label for="star2.5" class="star-L" title="2.5점"></label>
+
+                    <input type="radio" name="rating" id="star2" value="2">
+                    <label for="star2" class="star-R" title="2.0점"></label>
+
+                    <input type="radio" name="rating" id="star1.5" value="1.5">
+                    <label for="star1.5" class="star-L" title="1.5점"></label>
+
+                    <input type="radio" name="rating" id="star1" value="1">
+                    <label for="star1" class="star-R" title="1.0점"></label>
+
+                    <input type="radio" name="rating" id="star0.5" value="0.5">
+                    <label for="star0.5" class="star-L" title="0.5점"></label>
+                </div>
                     
                     <textarea id="review-comment" 
                         placeholder="한줄평을 작성하세요 (최대 200자)"></textarea>
@@ -400,308 +394,286 @@
     </div>
 
     <script>
-        const videosData = document.getElementById('videos-data');
-        const videos = videosData ? JSON.parse(videosData.textContent) : [];
+    const videosData = document.getElementById('videos-data');
+    const videos = videosData ? JSON.parse(videosData.textContent) : [];
 
-        let currentGenre = '';
-        let currentGenreVideos = [];
-        let currentVideoIndex = 0;
+    let currentGenre = '';
+    let currentGenreVideos = [];
+    let currentVideoIndex = 0;
 
-        // 장르별 분류
-        function groupByGenre(videos) {
-            const genreMap = {};
-            videos.forEach(video => {
-                const genres = video.genre.split(',').map(g => g.trim());
-                genres.forEach(genre => {
-                    if (!genreMap[genre]) genreMap[genre] = [];
-                    genreMap[genre].push(video);
-                });
-            });
-            return genreMap;
+    // [중요] OTT 링크 생성 함수 (이게 없어서 에러가 났었습니다)
+    function getOttLink(platform, title) {
+        const query = encodeURIComponent(title);
+        switch (platform.toLowerCase()) {
+            case 'netflix': return `https://www.netflix.com/search?q=${query}`;
+            case 'watcha': return `https://watcha.com/search?query=${query}`;
+            case 'tving': return `https://www.tving.com/search/total?keyword=${query}`;
+            case 'wavve': return `https://www.wavve.com/search/search?searchWord=${query}`;
+            default: return '#';
         }
+    }
 
-        // 버블 크기 계산 (현재 데이터 기준)
-        function calculateBubbleSize(count, maxCount) {
-            const minSize = 80;
-            const maxSize = 200;
-            // 현재 데이터의 최대값을 기준으로 비율 계산
-            return minSize + (count / maxCount) * (maxSize - minSize);
-        }
-
-        // 불규칙한 위치 계산
-        function getRandomPosition(size, containerWidth, containerHeight, existingBubbles) {
-            let x, y, attempts = 0;
-            const maxAttempts = 50;
-
-            do {
-                x = Math.random() * (containerWidth - size);
-                y = Math.random() * (containerHeight - size);
-                attempts++;
-
-                // 겹침 체크
-                const overlap = existingBubbles.some(bubble => {
-                    const dx = x - bubble.x;
-                    const dy = y - bubble.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    return distance < (size + bubble.size) / 2 + 20; // 20px 여유
-                });
-
-                if (!overlap || attempts >= maxAttempts) break;
-            } while (true);
-
-            return { x, y };
-        }
-
-        // 버블 렌더링
-        function renderBubbles() {
-            const container = document.getElementById('genre-bubbles');
-            const emptyMessage = document.getElementById('empty-message');
-
-            if (videos.length === 0) {
-                emptyMessage.style.display = 'block';
-                return;
-            }
-
-            const genreMap = groupByGenre(videos);
-            const genres = Object.keys(genreMap);
-
-            if (genres.length === 0) {
-                emptyMessage.style.display = 'block';
-                return;
-            }
-
-            const containerRect = container.getBoundingClientRect();
-            const existingBubbles = [];
-
-            // [추가] 현재 데이터에서 최대 개수 찾기
-            const maxCount = Math.max(...genres.map(genre => genreMap[genre].length));
-
+    // 장르별 분류
+    function groupByGenre(videos) {
+        const genreMap = {};
+        videos.forEach(video => {
+            const genres = video.genre.split(',').map(g => g.trim());
             genres.forEach(genre => {
-                const count = genreMap[genre].length;
-                const size = calculateBubbleSize(count, maxCount); // [수정] maxCount 전달
-                const pos = getRandomPosition(size, containerRect.width, containerRect.height, existingBubbles);
-
-                existingBubbles.push({ x: pos.x, y: pos.y, size });
-
-                const bubble = document.createElement('div');
-                bubble.className = 'genre-bubble';
-                bubble.style.width = `${size}px`;
-                bubble.style.height = `${size}px`;
-                bubble.style.left = `${pos.x}px`;
-                bubble.style.top = `${pos.y}px`;
-                bubble.style.animationDelay = `${Math.random() * 2}s`; // 랜덤 딜레이
-                bubble.innerHTML = `
-                    <h3>${genre}</h3>
-                    <span class="count">${count}개</span>
-                `;
-
-                bubble.addEventListener('click', () => openModal(genre, genreMap[genre]));
-                container.appendChild(bubble);
+                if (!genreMap[genre]) genreMap[genre] = [];
+                genreMap[genre].push(video);
             });
+        });
+        return genreMap;
+    }
+
+    // 버블 크기 및 위치 계산 함수들...
+    function calculateBubbleSize(count, maxCount) {
+        const minSize = 80;
+        const maxSize = 200;
+        return minSize + (count / maxCount) * (maxSize - minSize);
+    }
+
+    function getRandomPosition(size, containerWidth, containerHeight, existingBubbles) {
+        let x, y, attempts = 0;
+        const maxAttempts = 50;
+        do {
+            x = Math.random() * (containerWidth - size);
+            y = Math.random() * (containerHeight - size);
+            attempts++;
+            const overlap = existingBubbles.some(bubble => {
+                const dx = x - bubble.x;
+                const dy = y - bubble.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < (size + bubble.size) / 2 + 20;
+            });
+            if (!overlap || attempts >= maxAttempts) break;
+        } while (true);
+        return { x, y };
+    }
+
+    // 버블 렌더링
+    function renderBubbles() {
+        const container = document.getElementById('genre-bubbles');
+        const emptyMessage = document.getElementById('empty-message');
+
+        if (!videos || videos.length === 0) {
+            emptyMessage.style.display = 'block';
+            return;
         }
 
-        // 모달 열기
-        function openModal(genre, videos) {
-            currentGenre = genre;
-            currentGenreVideos = videos.sort((a, b) => (b.rating || 0) - (a.rating || 0)); // 평점 높은 순
-            currentVideoIndex = 0;
+        const genreMap = groupByGenre(videos);
+        const genres = Object.keys(genreMap);
 
-            document.getElementById('video-modal').classList.add('active');
+        if (genres.length === 0) {
+            emptyMessage.style.display = 'block';
+            return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const existingBubbles = [];
+        const maxCount = Math.max(...genres.map(genre => genreMap[genre].length));
+
+        container.innerHTML = ''; // 초기화
+
+        genres.forEach(genre => {
+            const count = genreMap[genre].length;
+            const size = calculateBubbleSize(count, maxCount);
+            const pos = getRandomPosition(size, containerRect.width, containerRect.height, existingBubbles);
+
+            existingBubbles.push({ x: pos.x, y: pos.y, size });
+
+            const bubble = document.createElement('div');
+            bubble.className = 'genre-bubble';
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+            bubble.style.left = `${pos.x}px`;
+            bubble.style.top = `${pos.y}px`;
+            bubble.style.animationDelay = `${Math.random() * 2}s`;
+            bubble.innerHTML = `<h3>${genre}</h3><span class="count">${count}개</span>`;
+
+            bubble.addEventListener('click', () => openModal(genre, genreMap[genre]));
+            container.appendChild(bubble);
+        });
+    }
+
+    function openModal(genre, videos) {
+        currentGenre = genre;
+        currentGenreVideos = videos.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        currentVideoIndex = 0;
+        document.getElementById('video-modal').classList.add('active');
+        showCurrentVideo();
+    }
+
+    // [수정됨] 현재 비디오 표시 (에러 원인 수정 완료)
+    function showCurrentVideo() {
+        const video = currentGenreVideos[currentVideoIndex];
+        const container = document.getElementById('current-video');
+        
+        // 여기서 함수 이름을 getOttLink로 통일!
+        const ottLink = getOttLink(video.ottPlatform, video.title); 
+
+        container.innerHTML = `
+            <img src="${video.posterImageUrl}" alt="${video.title}">
+            <div class="video-info">
+                <h2>${video.title}</h2>
+                <div class="meta">
+                    <a href="${ottLink}" target="_blank" style="text-decoration:none;">
+                        <span class="ott-tag" style="cursor:pointer;">${video.ottPlatform} ↗</span>
+                    </a>
+                    <span class="genre-tag">${video.genre}</span>
+                    <span class="rating-tag">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</span>
+                </div>
+                <p>${video.description}</p>
+                <p style="color: #888; font-size: 12px; margin-top: 10px;">
+                    ${currentVideoIndex + 1} / ${currentGenreVideos.length}
+                </p>
+            </div>
+        `;
+
+        // 사이트 내 평점 표시
+        const ourRatingText = document.getElementById('our-rating-text');
+        if (ourRatingText) {
+            const avg = video.ourRating || 0;
+            const count = video.reviewCount || 0;
+            ourRatingText.textContent = count === 0 ? '아직 평점이 없습니다.' : `${avg.toFixed(1)}점 (${count}명 참여)`;
+        }
+
+        // 별점 입력 초기화
+        document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+        document.getElementById('review-comment').value = '';
+
+        loadReviews(video._id);
+    }
+
+    function prevVideo() {
+        if (currentVideoIndex > 0) {
+            currentVideoIndex--;
             showCurrentVideo();
         }
-
-        // 현재 비디오 표시
-        function showCurrentVideo() {
-            const video = currentGenreVideos[currentVideoIndex];
-            const container = document.getElementById('current-video');
-
-            container.innerHTML = `
-                <img src="${video.posterImageUrl}" alt="${video.title}">
-                <div class="video-info">
-                    <h2>${video.title}</h2>
-                    <div class="meta">
-                        <span class="ott-tag">${video.ottPlatform}</span>
-                        <span class="genre-tag">${video.genre}</span>
-                        <span class="rating-tag">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</span>
-                    </div>
-                    <p>${video.description}</p>
-                    <p style="color: #888; font-size: 12px; margin-top: 10px;">
-                        ${currentVideoIndex + 1} / ${currentGenreVideos.length}
-                    </p>
-                </div>
-            `;
-
-            // 🔹 our rating 표시 갱신
-  const ourRatingText = document.getElementById('our-rating-text');
-  if (ourRatingText) {
-    const avg = video.ourRating || 0;
-    const count = video.reviewCount || 0;
-    if (count === 0) {
-      ourRatingText.textContent = '아직 평점이 없습니다.';
-    } else {
-      ourRatingText.textContent = `${avg.toFixed(1)}점 (${count}명 참여)`;
     }
-  }
 
-            loadReviews(video._id);
+    function nextVideo() {
+        if (currentVideoIndex < currentGenreVideos.length - 1) {
+            currentVideoIndex++;
+            showCurrentVideo();
         }
+    }
 
-        // 이전 비디오
-        function prevVideo() {
-            if (currentVideoIndex > 0) {
-                currentVideoIndex--;
-                showCurrentVideo();
+    async function loadReviews(videoId) {
+        try {
+            const response = await fetch(`/api/reviews/${videoId}`);
+            const reviews = await response.json();
+            const reviewList = document.getElementById('review-list');
+            
+            if (!reviews || reviews.length === 0) {
+                reviewList.innerHTML = '<p class="empty-message">아직 리뷰가 없습니다.</p>';
+                return;
             }
-        }
 
-        // 다음 비디오
-        function nextVideo() {
-            if (currentVideoIndex < currentGenreVideos.length - 1) {
-                currentVideoIndex++;
-                showCurrentVideo();
-            }
-        }
-
-        // 리뷰 로드
-        async function loadReviews(videoId) {
-            try {
-                const response = await fetch(`/api/reviews/${videoId}`);
-                const reviews = await response.json();
-                
-                const reviewList = document.getElementById('review-list');
-                if (reviews.length === 0) {
-                    reviewList.innerHTML = '<p class="empty-message">아직 리뷰가 없습니다.</p>';
-                    return;
-                }
-
-                reviewList.innerHTML = reviews.map(review => `
-                    <div class="review-item">
-                        <div class="review-header">
-                            <span class="review-user">${review.username}</span>
-                            <span class="review-rating">${'★'.repeat(review.rating)}</span>
-                        </div>
-                        <p class="review-comment">${review.comment}</p>
-                        <p class="review-date">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
+            reviewList.innerHTML = reviews.map(review => `
+                <div class="review-item">
+                    <div class="review-header">
+                        <span class="review-user">${review.username}</span>
+                        <span class="review-rating">${'★'.repeat(Math.floor(review.rating))}</span>
                     </div>
-                `).join('');
-            } catch (err) {
-                console.error('리뷰 로드 실패:', err);
-            }
+                    <p class="review-comment">${review.comment}</p>
+                    <p class="review-date">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error('리뷰 로드 실패:', err);
         }
+    }
 
-        // 리뷰 작성
-        async function submitReview() {
-            const rating = document.querySelector('input[name="rating"]:checked');
-            const comment = document.getElementById('review-comment').value.trim();
+    async function submitReview() {
+        const rating = document.querySelector('input[name="rating"]:checked');
+        const comment = document.getElementById('review-comment').value.trim();
 
-            if (!rating) {
-                alert('별점을 선택해주세요.');
-                return;
+        if (!rating) { alert('별점을 선택해주세요.'); return; }
+        if (!comment) { alert('한줄평을 작성해주세요.'); return; }
+
+        const video = currentGenreVideos[currentVideoIndex];
+        try {
+            const response = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    videoId: video._id,
+                    rating: parseFloat(rating.value),
+                    comment
+                })
+            });
+
+            if (response.ok) {
+                alert('리뷰가 등록되었습니다!');
+                showCurrentVideo(); // 화면 갱신
+            } else {
+                alert('리뷰 등록 실패');
             }
-
-            if (!comment) {
-                alert('한줄평을 작성해주세요.');
-                return;
-            }
-
-            if (comment.length > 200) {
-                alert('한줄평은 200자 이하로 작성해주세요.');
-                return;
-            }
-
-            const video = currentGenreVideos[currentVideoIndex];
-
-            try {
-                const response = await fetch('/api/reviews', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        videoId: video._id,
-                        rating: parseInt(rating.value),
-                        comment
-                    })
-                });
-
-                if (response.ok) {
-                    alert('리뷰가 등록되었습니다!');
-                    document.getElementById('review-comment').value = '';
-                    document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
-                    loadReviews(video._id);
-                } else {
-                    alert('리뷰 등록에 실패했습니다.');
-                }
-            } catch (err) {
-                console.error('리뷰 작성 실패:', err);
-            }
+        } catch (err) {
+            console.error(err);
         }
+    }
 
-        // 모달 닫기
-        function closeModal() {
-            document.getElementById('video-modal').classList.remove('active');
-        }
+    function closeModal() {
+        document.getElementById('video-modal').classList.remove('active');
+    }
+    
+    // 전체 보기 등 나머지 로직
+    const toggleBtn = document.getElementById('toggle-view-btn');
+    const listTitle = document.getElementById('list-title');
+    const genreBubbles = document.getElementById('genre-bubbles');
+    const allVideosContainer = document.getElementById('all-videos-container');
+    const emptyMessage = document.getElementById('empty-message');
+    let currentView = 'genre';
 
-        // 초기화
-        renderBubbles();
-        // 모달 외부 클릭 시 닫기
-        document.getElementById('video-modal').addEventListener('click', (e) => {
-            if (e.target.id === 'video-modal') {
-                closeModal();
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            if (currentView === 'genre') {
+                currentView = 'all';
+                listTitle.textContent = 'My Liked Videos - All';
+                toggleBtn.textContent = '장르 보기';
+                genreBubbles.style.display = 'none';
+                if(emptyMessage) emptyMessage.style.display = 'none';
+                allVideosContainer.style.display = 'block';
+                renderAllVideos();
+            } else {
+                currentView = 'genre';
+                listTitle.textContent = 'My Liked Videos by Genre';
+                toggleBtn.textContent = '전체 보기';
+                genreBubbles.style.display = 'block';
+                allVideosContainer.style.display = 'none';
+                renderBubbles(); // 버블 다시 그리기
             }
         });
-        // 전체 리스트 렌더링
-        function renderAllVideos() {
+    }
+
+    function renderAllVideos() {
         const container = document.getElementById('all-videos-list');
         if (!videos || videos.length === 0) {
             container.innerHTML = '<p class="empty-message">아직 좋아요를 누른 영상이 없습니다.</p>';
             return;
         }
-
         container.innerHTML = videos.map((v, idx) => `
-    <div class="all-video-card" data-index="${idx}">
-      <img src="${v.posterImageUrl}" alt="${v.title}" class="all-video-poster">
-    </div>
-  `).join('');
+            <div class="all-video-card" data-index="${idx}">
+                <img src="${v.posterImageUrl}" alt="${v.title}" class="all-video-poster">
+            </div>
+        `).join('');
 
-  // 카드 클릭 시 모달(설명 + 한줄평) 열기
-  document.querySelectorAll('.all-video-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const index = parseInt(card.dataset.index, 10);
-      currentGenre = 'ALL';
-      currentGenreVideos = videos;
-      currentVideoIndex = index;
-      document.getElementById('video-modal').classList.add('active');
-      showCurrentVideo();   // 기존 함수 사용
-    });
-  });
-}
-
-const toggleBtn = document.getElementById('toggle-view-btn');
-  const listTitle = document.getElementById('list-title');
-  const genreBubbles = document.getElementById('genre-bubbles');
-  const allVideosContainer = document.getElementById('all-videos-container');
-  const emptyMessage = document.getElementById('empty-message');
-
-  let currentView = 'genre';
-
-  toggleBtn.addEventListener('click', () => {
-    if (currentView === 'genre') {
-      currentView = 'all';
-      listTitle.textContent = 'My Liked Videos - All';
-      toggleBtn.textContent = '장르 보기';
-      genreBubbles.style.display = 'none';
-      if (emptyMessage) emptyMessage.style.display = 'none';
-      allVideosContainer.style.display = 'block';
-      renderAllVideos();
-    } else {
-      currentView = 'genre';
-      listTitle.textContent = 'My Liked Videos by Genre';
-      toggleBtn.textContent = '전체 보기';
-      genreBubbles.style.display = 'block';
-      allVideosContainer.style.display = 'none';
+        document.querySelectorAll('.all-video-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const index = parseInt(card.dataset.index, 10);
+                currentGenre = 'ALL';
+                currentGenreVideos = videos;
+                currentVideoIndex = index;
+                document.getElementById('video-modal').classList.add('active');
+                showCurrentVideo();
+            });
+        });
     }
-  });
 
-    </script>
+    renderBubbles(); // 초기 실행
+</script>
     <a href="/logout" class="logout-btn">로그아웃</a>
 </body>
 </html>
