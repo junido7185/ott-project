@@ -65,25 +65,33 @@ const getNextVideo = asyncHandler(async (req, res) => {
     const userId = req.session.user.id; // 세션 ID 사용
     const user = await User.findById(userId);
 
-    // [추가] 쿼리에서 OTT 필터 가져오기
+    // 쿼리에서 OTT 필터 가져오기
     const selectedOtt = req.query.ott;
+    const selectedGenre = req.query.genre;
 
     const seenVideos = [
         ...user.likedVideos, 
         ...user.passedVideos
     ];
 
-    // [수정] OTT 필터 적용
+    // OTT 필터 적용
     const query = { _id: { $nin: seenVideos } };
     if (selectedOtt) {
         query.ottPlatform = selectedOtt;
     }
-
-    const nextVideo = await Video.findOne(query);
-
-    if (!nextVideo) {
-        return res.status(404).json({ message: "더 이상 볼 비디오가 없습니다." });
+    // 장르 필터링
+    if (selectedGenre) {
+        query.genre = { $regex: selectedGenre, $options: 'i' };
     }
+
+    // [수정] 랜덤하게 하나 뽑기 (count -> skip 방식)
+    const count = await Video.countDocuments(query);
+    if (count === 0) {
+        return res.status(404).json({ message: "해당 조건의 볼 비디오가 없습니다." });
+    }
+    
+    const random = Math.floor(Math.random() * count);
+    const nextVideo = await Video.findOne(query).skip(random);
 
     res.status(200).json(nextVideo);
 });

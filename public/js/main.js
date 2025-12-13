@@ -162,6 +162,7 @@ async function loadNextVideo() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const selectedOtt = urlParams.get('ott');
+        const selectedGenre = urlParams.get('genre');
         
         const apiUrl = selectedOtt 
             ? `/api/videos/next?ott=${selectedOtt}` 

@@ -45,9 +45,9 @@ const getMyReviews = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: "로그인이 필요합니다." });
     }
 
-    const reviews = await Review.find({ 
-        userId: req.session.user.id 
-    }).populate('videoId').sort({ createdAt: -1 });
+    const reviews = await Review.find({ userId: req.session.user.id })
+        .populate('videoId') // 비디오 정보를 가져와야 포스터랑 제목을 씁니다.
+        .sort({ createdAt: -1 });
     
     res.status(200).json(reviews);
 });
