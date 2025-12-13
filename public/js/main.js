@@ -162,23 +162,26 @@ async function loadNextVideo() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const selectedOtt = urlParams.get('ott');
-        const selectedGenre = urlParams.get('genre');
+        const selectedGenre = urlParams.get('genre'); // [추가] 장르 파라미터 가져오기
         
-        const apiUrl = selectedOtt 
-            ? `/api/videos/next?ott=${selectedOtt}` 
-            : `/api/videos/next`;
+        // [수정] 쿼리 스트링 조립 (OTT와 장르 모두 반영되도록 변경)
+        let apiUrl = `/api/videos/next?`;
+        if (selectedOtt) apiUrl += `ott=${selectedOtt}&`;
+        if (selectedGenre) apiUrl += `genre=${selectedGenre}&`;
             
         const response = await fetch(apiUrl);
         const data = await response.json();
         const cardContainer = document.querySelector(".card-container");
 
         if (!response.ok || data.message) {
+            // 메시지 표시 (예: "해당 조건의 볼 비디오가 없습니다.")
             cardContainer.innerHTML = `<h2>${data.message || "더 이상 볼 비디오가 없습니다."}</h2>`;
             return;
         }
 
         const card = cardContainer.querySelector('.video-card');
         if (card) {
+            // 카드 애니메이션 및 스타일 초기화
             card.classList.remove('moving'); 
             card.style.transition = 'none';
             card.style.transform = 'translateX(-50%)';
@@ -186,22 +189,18 @@ async function loadNextVideo() {
             card.style.opacity = "1";
             card.scrollTop = 0;
 
+            // 데이터 바인딩
             card.querySelector(".card-image img").src = data.posterImageUrl;
             card.querySelector(".card-info h2").innerText = data.title;
             
+            // OTT 태그 설정 (바로가기 링크 포함)
             const ottTag = card.querySelector(".ott-tag");
-            // 1. 텍스트 뒤에 화살표 추가 (링크라는 힌트)
             ottTag.innerText = `${data.ottPlatform} ↗`; 
-            
-            // 2. 마우스 커서를 손가락 모양으로 변경
             ottTag.style.cursor = "pointer";
             
-            // 3. 클릭 이벤트 연결
+            // OTT 태그 클릭 이벤트 재설정
             ottTag.onclick = (e) => {
-                // 중요: 카드를 잡고 드래그하는 스와이프 동작이 발생하지 않도록 막음
                 e.stopPropagation(); 
-                
-                // 새 탭에서 검색 결과 열기
                 const link = getOttLink(data.ottPlatform, data.title);
                 if (link !== '#') {
                     window.open(link, '_blank');
@@ -210,12 +209,14 @@ async function loadNextVideo() {
                 }
             };
 
+            // 평점(TMDb) 표시
             const ratingEl = card.querySelector(".rating-tag");
             if (ratingEl) {
                 const score = data.rating ? data.rating.toFixed(1) : '0.0';
                 ratingEl.innerText = `★ ${score}`;
             }
 
+            // 사이트 내 평점(Our Rating) 표시
             const ourRatingEl = card.querySelector(".our-rating-tag");
             if (ourRatingEl) {
                 const ourScore = data.ourRating ? data.ourRating.toFixed(1) : '0.0';
@@ -223,12 +224,15 @@ async function loadNextVideo() {
                 ourRatingEl.innerText = `Our Rating: ★ ${ourScore} (${reviewCount}개)`;
             }
 
+            // 설명 및 더보기 버튼 설정
             const descElement = card.querySelector(".description");
             descElement.innerText = data.description;
             descElement.classList.remove('expanded', 'truncated');
 
+            // 비디오 ID 업데이트
             card.dataset.videoId = data._id;
 
+            // 별점 입력 초기화
             selectedRating = 0;
             card.querySelectorAll('.star').forEach(s => {
                 s.textContent = '☆';
@@ -237,11 +241,13 @@ async function loadNextVideo() {
             card.querySelector('.selected-rating').textContent = '평점을 선택하세요';
             card.querySelector('.review-input').value = '';
 
+            // 기능 재연결
             setupReadMore();
             setupStarRating();
-            setupReviewSubmit();
+            setupReviewSubmit(); // [중요] 이전 이벤트 리스너 중복 방지를 위해 확인 필요하지만, 현재 구조상 덮어씌워짐
             loadReviews();
 
+            // 카드 등장 애니메이션
             setTimeout(() => {
                 card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
             }, 50);
