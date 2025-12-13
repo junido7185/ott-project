@@ -61,21 +61,32 @@ const setNickname = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: "닉네임을 입력해주세요." });
     }
 
+    const existing = await User.findOne({ nickname: nickname.trim() });
+    if (existing && existing._id.toString() !== req.session.user.id) {
+        return res.status(400).json({ message: "이미 사용 중인 닉네임입니다." });
+    }
+
     // 1. DB 업데이트
     const updatedUser = await User.findByIdAndUpdate(
         userId,
-        { nickname: nickname },
+        { nickname: nickname.trim() },
         { new: true } // 업데이트된 정보 반환
     );
 
     // 2. 세션 정보도 업데이트 (중요: 그래야 새로고침해도 유지됨)
     req.session.user.nickname = updatedUser.nickname;
     
+    const updateResult = await Review.updateMany(
+        { userId: userId },  // 이 사용자가 쓴 모든 리뷰를
+        { username: updatedUser.nickname }  // 새 닉네임으로 변경
+    );
+
     // 세션 저장 후 응답
     req.session.save(() => {
         res.status(200).json({ 
             message: "닉네임이 변경되었습니다.", 
-            nickname: updatedUser.nickname 
+            nickname: updatedUser.nickname, 
+            updatedReviews: updateResult.modifiedCount
         });
     });
 });

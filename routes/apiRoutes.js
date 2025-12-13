@@ -42,6 +42,7 @@ router.route("/users/set-nickname").post(setNickname);
 router.route("/users/:userId/my-list").get(getLikedVideos);
 router.route("/users/:userId/like/:videoId").post(likeVideo);
 router.route("/users/:userId/pass/:videoId").post(passVideo);
+router.route("/users/set-nickname").post(setNickname);
 
 // --- Review Routes ---
 router.route("/reviews").post(createReview);
