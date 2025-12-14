@@ -49,21 +49,60 @@
         .search-item img {
             width: 100%;
             border-radius: 8px;
+            aspect-ratio: 2/3;
+            object-fit: cover;
         }
         .search-item h4 {
             color: #fff;
             font-size: 14px;
             margin-top: 10px;
+            text-align: center;
+        }
+
+        /* 모달 스타일 보정 */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .video-modal.active {
+            display: flex;
+        }
+        .modal-content-wrapper {
+            display: flex;
+            gap: 20px;
+            max-width: 90%;
+            height: 85vh;
+        }
+        .info-panel, .review-panel {
+            width: 450px;
+            background: #2f2f2f;
+            border-radius: 12px;
+            overflow-y: auto;
+        }
+        .info-panel {
+            overflow-x: hidden;
+        }
+        .info-padding {
+            padding: 20px;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>OTT-Swipe</h1>
-        <div style="display: flex; gap: 20px;">
-            <a href="/main">스와이프 하러가기</a>
-            <a href="/my-list">My List</a>
-            <a href="/my-reviews">내 한줄평 보기</a>
+        <h1><a href="/select-ott" style="text-decoration:none; color:inherit;">OTT-Swipe</a></h1>
+        <div class="header-nav">
+            <a href="/set-nickname" class="nav-link" style="font-size: 14px;">⚙️ 설정</a>
+            <a href="/main" class="nav-link">스와이프</a>
+            <a href="/my-list" class="nav-link">My List</a>
+            <a href="/my-reviews" class="nav-link">내 한줄평</a>
         </div>
     </header>
 
@@ -77,26 +116,38 @@
         <div class="search-results" id="search-results"></div>
     </div>
 
-    <!-- 비디오 모달 (my-list.ejs에서 복사) -->
-    <div class="video-modal" id="video-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center;">
-        <button class="close-modal" onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; font-size: 36px; color: #fff; cursor: pointer; background: rgba(0,0,0,0.7); width: 50px; height: 50px; border-radius: 50%; border: none;">✕</button>
+    <div class="video-modal" id="video-modal">
+        <button class="close-modal" onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; font-size: 36px; color: #fff; cursor: pointer; background: rgba(0,0,0,0.7); width: 50px; height: 50px; border-radius: 50%; border: none; z-index:1001;">✕</button>
         
-        <div style="display: flex; gap: 20px; max-width: 90%; height: 85vh;">
-            <div style="width: 450px; background: #2f2f2f; border-radius: 12px; overflow-y: auto;" id="video-detail"></div>
+        <div class="modal-content-wrapper">
+            <div class="info-panel" id="video-detail">
+                </div>
 
-            <div style="width: 450px; background: #2f2f2f; border-radius: 12px; padding: 20px; display: flex; flex-direction: column;">
-                <h3 style="margin-top: 0; color: #e50914;">한줄평</h3>
+            <div class="review-panel" style="padding: 20px; display: flex; flex-direction: column;">
+                <div class="our-rating-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: #e50914; font-weight: bold;">사이트 내 평점</span>
+                    <span id="our-rating-text" style="color: #ffcc00; font-weight: bold; font-size: 14px;">-.-점 (0명 참여)</span>
+                </div>
+                
+                <h3 style="margin-top: 24px; color: #e50914; border-bottom: 2px solid #444; padding-bottom: 10px;">한줄평</h3>
                 
                 <div style="margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px; margin: 10px 0;">
-                        <label style="font-size: 30px; color: #ffcc00; cursor: pointer;" onclick="setRating(5)">★</label>
-                        <label style="font-size: 30px; color: #ffcc00; cursor: pointer;" onclick="setRating(4)">★</label>
-                        <label style="font-size: 30px; color: #ffcc00; cursor: pointer;" onclick="setRating(3)">★</label>
-                        <label style="font-size: 30px; color: #ffcc00; cursor: pointer;" onclick="setRating(2)">★</label>
-                        <label style="font-size: 30px; color: #ffcc00; cursor: pointer;" onclick="setRating(1)">★</label>
+                    <div class="rating-input">
+                        <input type="radio" name="rating" id="star5" value="5"><label for="star5" class="star-R" title="5.0"></label>
+                        <input type="radio" name="rating" id="star4.5" value="4.5"><label for="star4.5" class="star-L" title="4.5"></label>
+                        <input type="radio" name="rating" id="star4" value="4"><label for="star4" class="star-R" title="4.0"></label>
+                        <input type="radio" name="rating" id="star3.5" value="3.5"><label for="star3.5" class="star-L" title="3.5"></label>
+                        <input type="radio" name="rating" id="star3" value="3"><label for="star3" class="star-R" title="3.0"></label>
+                        <input type="radio" name="rating" id="star2.5" value="2.5"><label for="star2.5" class="star-L" title="2.5"></label>
+                        <input type="radio" name="rating" id="star2" value="2"><label for="star2" class="star-R" title="2.0"></label>
+                        <input type="radio" name="rating" id="star1.5" value="1.5"><label for="star1.5" class="star-L" title="1.5"></label>
+                        <input type="radio" name="rating" id="star1" value="1"><label for="star1" class="star-R" title="1.0"></label>
+                        <input type="radio" name="rating" id="star0.5" value="0.5"><label for="star0.5" class="star-L" title="0.5"></label>
                     </div>
-                    <textarea id="review-comment" placeholder="한줄평을 작성하세요" style="width: 100%; height: 60px; padding: 10px; border-radius: 8px; background: #1a1a1a; color: #fff; border: 1px solid #555; box-sizing: border-box;"></textarea>
-                    <button onclick="submitReview()" style="width: 100%; padding: 10px; background: #e50914; color: #fff; border: none; border-radius: 8px; margin-top: 10px; cursor: pointer;">등록</button>
+
+                    <textarea id="review-comment" placeholder="한줄평을 작성하세요 (최대 200자)" style="width: 100%; height: 60px; padding: 10px; border-radius: 8px; background: #1a1a1a; color: #fff; border: 1px solid #555; box-sizing: border-box; resize: none; margin-top: 10px;"></textarea>
+                    
+                    <button onclick="submitReview()" style="width: 100%; padding: 10px; background: #e50914; color: #fff; border: none; border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: bold;">등록</button>
                 </div>
 
                 <div style="flex: 1; overflow-y: auto;" id="review-list"></div>
@@ -105,11 +156,18 @@
     </div>
 
     <script>
-        let selectedRating = 0;
         let currentVideoId = null;
 
-        function setRating(rating) {
-            selectedRating = rating;
+        // [추가] OTT 링크 생성 함수
+        function getOttLink(platform, title) {
+            const query = encodeURIComponent(title);
+            switch (platform.toLowerCase()) {
+                case 'netflix': return `https://www.netflix.com/search?q=${query}`;
+                case 'watcha': return `https://watcha.com/search?query=${query}`;
+                case 'tving': return `https://www.tving.com/search/total?keyword=${query}`;
+                case 'wavve': return `https://www.wavve.com/search/search?searchWord=${query}`;
+                default: return '#';
+            }
         }
 
         async function searchMovies() {
@@ -130,7 +188,7 @@
                 }
 
                 resultsContainer.innerHTML = videos.map(video => `
-                    <div class="search-item" onclick='openVideoModal(${JSON.stringify(video)})'>
+                    <div class="search-item" onclick='openVideoModal(${JSON.stringify(video).replace(/'/g, "&#39;")})'>
                         <img src="${video.posterImageUrl}" alt="${video.title}">
                         <h4>${video.title}</h4>
                     </div>
@@ -142,24 +200,41 @@
 
         function openVideoModal(video) {
             currentVideoId = video._id;
-            document.getElementById('video-modal').style.display = 'flex';
+            const modal = document.getElementById('video-modal');
+            modal.classList.add('active'); // active 클래스로 제어
             
+            const ottLink = getOttLink(video.ottPlatform, video.title);
+
             document.getElementById('video-detail').innerHTML = `
-                <img src="${video.posterImageUrl}" style="width: 100%;">
-                <div style="padding: 20px;">
-                    <h2 style="color: #fff;">${video.title}</h2>
-                    <p style="color: #e50914; font-weight: bold;">${video.ottPlatform}</p>
-                    <p style="color: #ffcc00;">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</p>
-                    <p style="color: #ccc;">${video.description}</p>
+                <img src="${video.posterImageUrl}" style="width: 100%; display:block; min-height:300px; background:#000;">
+                <div class="info-padding">
+                    <h2 style="color: #fff; margin-top:0;">${video.title}</h2>
+                    <div style="margin-bottom:15px;">
+                        <a href="${ottLink}" target="_blank" style="text-decoration:none;">
+                            <span class="ott-tag" style="background:#e50914; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">${video.ottPlatform} ↗</span>
+                        </a>
+                        <span style="background:#555; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; margin-left:8px;">${video.genre}</span>
+                        <span style="color:#ffcc00; margin-left:8px; font-weight:bold;">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</span>
+                    </div>
+                    <p style="color: #ccc; line-height:1.5;">${video.description}</p>
                 </div>
             `;
+            
+            // 사이트 평점 표시
+            const ourRatingText = document.getElementById('our-rating-text');
+            const avg = video.ourRating || 0;
+            const count = video.reviewCount || 0;
+            ourRatingText.textContent = count === 0 ? '아직 평점이 없습니다.' : `${avg.toFixed(1)}점 (${count}명 참여)`;
+
+            // 입력 초기화
+            document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+            document.getElementById('review-comment').value = '';
 
             loadReviews(video._id);
         }
 
         function closeModal() {
-            document.getElementById('video-modal').style.display = 'none';
-            selectedRating = 0;
+            document.getElementById('video-modal').classList.remove('active');
             currentVideoId = null;
         }
 
@@ -170,7 +245,7 @@
                 
                 const reviewList = document.getElementById('review-list');
                 if (reviews.length === 0) {
-                    reviewList.innerHTML = '<p style="color: #888;">아직 리뷰가 없습니다.</p>';
+                    reviewList.innerHTML = '<p style="color: #888; text-align:center; padding-top:20px;">아직 리뷰가 없습니다.</p>';
                     return;
                 }
 
@@ -178,9 +253,9 @@
                     <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
                         <div style="display: flex; justify-content: space-between;">
                             <span style="color: #fff; font-weight: bold;">${review.username}</span>
-                            <span style="color: #ffcc00;">${'★'.repeat(review.rating)}</span>
+                            <span style="color: #ffcc00;">${'★'.repeat(Math.floor(review.rating))}</span>
                         </div>
-                        <p style="color: #ccc; margin: 8px 0;">${review.comment}</p>
+                        <p style="color: #ccc; margin: 8px 0; line-height:1.4;">${review.comment}</p>
                         <p style="color: #888; font-size: 12px;">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
                     </div>
                 `).join('');
@@ -190,7 +265,8 @@
         }
 
         async function submitReview() {
-            if (selectedRating === 0) {
+            const ratingInput = document.querySelector('input[name="rating"]:checked');
+            if (!ratingInput) {
                 alert('별점을 선택하세요.');
                 return;
             }
@@ -207,16 +283,16 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         videoId: currentVideoId,
-                        rating: selectedRating,
+                        rating: parseFloat(ratingInput.value), // 반개 단위 float 변환
                         comment
                     })
                 });
-
                 if (response.ok) {
                     alert('리뷰가 등록되었습니다!');
-                    document.getElementById('review-comment').value = '';
-                    selectedRating = 0;
+                    // 현재 비디오 정보를 다시 가져와서 평점 갱신 (선택사항)
                     loadReviews(currentVideoId);
+                } else {
+                    alert('리뷰 등록 실패');
                 }
             } catch (err) {
                 console.error('리뷰 작성 실패:', err);

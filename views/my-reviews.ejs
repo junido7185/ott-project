@@ -21,7 +21,8 @@
         }
         .review-card img {
             width: 120px;
-            height: auto;
+            height: 180px; /* 높이 고정 */
+            object-fit: cover;
             border-radius: 8px;
         }
         .review-content {
@@ -38,37 +39,34 @@
         .review-content .comment {
             color: #ccc;
             margin: 10px 0;
+            line-height: 1.5;
         }
         .review-actions {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .review-actions button {
             padding: 8px 15px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
-        .btn-edit {
-            background: #4caf50;
-            color: #fff;
-        }
-        .btn-delete {
-            background: #f44336;
-            color: #fff;
-        }
+        .btn-edit { background: #4caf50; color: #fff; }
+        .btn-delete { background: #f44336; color: #fff; }
     </style>
 </head>
 <body>
     <header>
-        <h1>OTT-Swipe</h1>
+        <h1><a href="/select-ott" style="text-decoration:none; color:inherit;">OTT-Swipe</a></h1>
         <nav style="flex: 1; display: flex; justify-content: center;">
-            <a href="/search">영화 검색</a>
-          </nav>
-        <div style="display: flex; gap: 20px;">
-            <a href="/main?ott=<%= lastOtt %>" class="nav-link">스와이프</a>
-            <a href="/my-list">My List</a>
+            <a href="/search" class="nav-link">영화 검색</a>
+        </nav>
+        <div class="header-nav">
+            <a href="/set-nickname" class="nav-link" style="font-size: 14px;">⚙️ 설정</a>
+            <a href="/main" class="nav-link">스와이프</a>
+            <a href="/my-list" class="nav-link">My List</a>
         </div>
     </header>
 
@@ -80,7 +78,6 @@
     </div>
 
     <script>
-        // OTT 링크 생성 함수 추가
         function getOttLink(platform, title) {
             const query = encodeURIComponent(title);
             switch (platform.toLowerCase()) {
@@ -96,7 +93,9 @@
             try {
                 const response = await fetch('/api/reviews/my');
                 const reviews = await response.json();
-                const container = document.getElementById('reviews-container');
+                
+                // [수정] ID가 reviews-list인 요소를 찾습니다. (이전엔 container를 찾아서 에러남)
+                const container = document.getElementById('reviews-list');
 
                 if (!reviews || reviews.length === 0) {
                     container.innerHTML = '<p style="text-align:center; color:#888;">작성한 한줄평이 없습니다.</p>';
@@ -104,29 +103,30 @@
                 }
 
                 container.innerHTML = reviews.map(review => {
-                    // 비디오 정보가 같이 오도록 populate 되었는지 확인 (reviewController 수정 필요할 수 있음)
-                    // 만약 review.videoId가 객체로 오지 않는다면 controller 수정 필요.
-                    // 현재 구조상 videoId가 populate 되어 있다고 가정하고 작성합니다.
-                    
-                    const videoTitle = review.videoId.title; 
-                    const ottPlatform = review.videoId.ottPlatform;
+                    // [추가] 비디오 정보가 삭제되었을 경우를 대비한 안전장치
+                    if (!review.videoId) return '';
+
+                    const videoTitle = review.videoId.title || '알 수 없는 작품';
+                    const ottPlatform = review.videoId.ottPlatform || 'Unknown';
+                    const posterUrl = review.videoId.posterImageUrl || '/images/default-poster.png';
                     const ottLink = getOttLink(ottPlatform, videoTitle);
 
                     return `
                     <div class="review-card">
-                        <img src="${review.videoId.posterImageUrl}" alt="${videoTitle}">
+                        <img src="${posterUrl}" alt="${videoTitle}">
                         <div class="review-content">
                             <h3>${videoTitle} 
                                 <a href="${ottLink}" target="_blank" style="text-decoration:none;">
                                     <span style="font-size:12px; background:#e50914; color:white; padding:2px 6px; border-radius:4px; margin-left:5px; cursor:pointer;">
-                                        ${ottPlatform} ▶
+                                        ${ottPlatform} ↗
                                     </span>
                                 </a>
                             </h3>
-                            <div class="rating">${'★'.repeat(Math.floor(review.rating))} (${review.rating})</div>
+                            <div class="rating">★ ${review.rating}</div>
                             <p class="comment">${review.comment}</p>
-                            <div class="date">${new Date(review.createdAt).toLocaleDateString()}</div>
-                            <div class="actions">
+                            <div class="date" style="color:#666; font-size:12px;">${new Date(review.createdAt).toLocaleDateString()}</div>
+                            
+                            <div class="review-actions">
                                 <button class="btn-edit" onclick='editReview("${review._id}", ${review.rating}, "${review.comment}")'>수정</button>
                                 <button class="btn-delete" onclick='deleteReview("${review._id}")'>삭제</button>
                             </div>
@@ -139,8 +139,15 @@
         }
 
         function editReview(reviewId, currentRating, currentComment) {
-            const newRating = prompt(`별점을 입력하세요 (1-5):`, currentRating);
-            if (!newRating || newRating < 1 || newRating > 5) return;
+            const newRating = prompt(`별점을 입력하세요 (0.5 - 5.0):`, currentRating);
+            if (!newRating) return;
+            
+            // 숫자 범위 체크
+            const ratingNum = parseFloat(newRating);
+            if (isNaN(ratingNum) || ratingNum < 0.5 || ratingNum > 5) {
+                alert('0.5에서 5 사이의 숫자를 입력해주세요.');
+                return;
+            }
 
             const newComment = prompt(`한줄평을 수정하세요:`, currentComment);
             if (!newComment) return;
@@ -148,7 +155,7 @@
             fetch(`/api/reviews/${reviewId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rating: parseInt(newRating), comment: newComment })
+                body: JSON.stringify({ rating: ratingNum, comment: newComment })
             }).then(() => {
                 alert('수정되었습니다!');
                 loadMyReviews();
@@ -157,7 +164,6 @@
 
         function deleteReview(reviewId) {
             if (!confirm('정말 삭제하시겠습니까?')) return;
-
             fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' })
                 .then(() => {
                     alert('삭제되었습니다!');
