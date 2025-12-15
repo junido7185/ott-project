@@ -162,9 +162,9 @@ async function loadNextVideo() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const selectedOtt = urlParams.get('ott');
-        const selectedGenre = urlParams.get('genre'); // [추가] 장르 파라미터 가져오기
+        const selectedGenre = urlParams.get('genre'); // 장르 파라미터 가져오기
         
-        // [수정] 쿼리 스트링 조립 (OTT와 장르 모두 반영되도록 변경)
+        //  쿼리 스트링 조립 (OTT와 장르 모두 반영되도록)
         let apiUrl = `/api/videos/next?`;
         if (selectedOtt) apiUrl += `ott=${selectedOtt}&`;
         if (selectedGenre) apiUrl += `genre=${selectedGenre}&`;

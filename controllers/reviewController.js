@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Review = require("../models/Review");
-const Video = require("../models/Video");  // [추가]
+const Video = require("../models/Video");
 
 // @desc    리뷰 작성
 // @route   POST /api/reviews
@@ -96,13 +96,13 @@ const deleteReview = asyncHandler(async (req, res) => {
         return res.status(404).json({ message: "리뷰를 찾을 수 없습니다." });
     }
 
-    // [추가] 평균 평점 업데이트
+    // 평균 평점 업데이트
     await updateVideoRating(review.videoId);
 
     res.status(200).json({ message: "리뷰가 삭제되었습니다." });
 });
 
-// [추가] 평균 평점 계산 헬퍼 함수
+// 평균 평점 계산 헬퍼 함수
 async function updateVideoRating(videoId) {
     const reviews = await Review.find({ videoId });
     
@@ -117,7 +117,7 @@ async function updateVideoRating(videoId) {
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
     
     await Video.findByIdAndUpdate(videoId, {
-        ourRating: Math.round(avgRating * 10) / 10,  // 소수점 1자리
+        ourRating: Math.round(avgRating * 10) / 10,  
         reviewCount: reviews.length
     });
 }
@@ -125,7 +125,7 @@ async function updateVideoRating(videoId) {
 module.exports = { 
     createReview, 
     getReviewsByVideo,
-    getMyReviews,      // [추가]
-    updateReview,      // [추가]
-    deleteReview       // [추가]
+    getMyReviews,      
+    updateReview,      
+    deleteReview       
 };

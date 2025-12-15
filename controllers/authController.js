@@ -65,7 +65,7 @@ const loginUser = asyncHandler(async (req, res) => {
             nickname: user.nickname || null  // [추가] 닉네임
         };
         
-        // [수정] 로그인 성공 시 OTT 선택 페이지로 이동
+        // 로그인 성공 시 OTT 선택 페이지로 이동
         req.session.save(() => {
             res.redirect("/select-ott"); // 변경된 부분
         });

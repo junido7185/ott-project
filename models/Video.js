@@ -26,16 +26,16 @@ const videoSchema = new mongoose.Schema({
     },
     genre: String,
 
-    // [추가] 평점 (Vote Average)
+    // 평점 (Vote Average)
     rating: {
         type: Number,
         default: 0
     },
-    ourRating: {  // [추가] 사이트 평균 평점
+    ourRating: {  // 사이트 평균 평점
         type: Number,
         default: 0
     },
-    reviewCount: {  // [추가] 리뷰 개수
+    reviewCount: {  // 리뷰 개수
         type: Number,
         default: 0
     }

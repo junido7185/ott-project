@@ -66,14 +66,14 @@ const setNickname = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: "이미 사용 중인 닉네임입니다." });
     }
 
-    // 1. DB 업데이트
+    // DB 업데이트
     const updatedUser = await User.findByIdAndUpdate(
         userId,
         { nickname: nickname.trim() },
         { new: true } // 업데이트된 정보 반환
     );
 
-    // 2. 세션 정보도 업데이트 (중요: 그래야 새로고침해도 유지됨)
+    // 세션 정보도 업데이트 (중요: 그래야 새로고침해도 유지됨)
     req.session.user.nickname = updatedUser.nickname;
     
     const updateResult = await Review.updateMany(

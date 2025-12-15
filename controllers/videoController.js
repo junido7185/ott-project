@@ -5,10 +5,10 @@ const User = require("../models/User"); // User 모델
 // .env 파일에서 API 키 불러오기
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
-// [!!] 장르 맵 캐시용 변수
+// 장르 맵 캐시용 변수
 let genreMapCache = null;
 
-// [!!] 장르 목록 API를 호출해 { 28: "액션", 12: "모험" } 형태의 객체를 만드는 함수
+// 장르 목록 API를 호출해 { 28: "액션", 12: "모험" } 형태의 객체를 만드는 함수
 const getGenreMap = async () => {
     // 이미 캐시된 맵이 있으면 API 호출 없이 즉시 반환
     if (genreMapCache) {
@@ -84,7 +84,7 @@ const getNextVideo = asyncHandler(async (req, res) => {
         query.genre = { $regex: selectedGenre, $options: 'i' };
     }
 
-    // [수정] 랜덤하게 하나 뽑기 (count -> skip 방식)
+    // 랜덤하게 하나 뽑기 (count -> skip 방식)
     const count = await Video.countDocuments(query);
     if (count === 0) {
         return res.status(404).json({ message: "해당 조건의 볼 비디오가 없습니다." });
@@ -247,5 +247,5 @@ module.exports = {
     getNextVideo,
     importVideoFromTmdb,
     seedDatabase,
-    searchVideos // [추가]
+    searchVideos
 };

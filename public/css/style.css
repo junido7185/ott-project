@@ -4,7 +4,7 @@ body {
     background-color: #141414;
     color: #ffffff;
     margin: 0;
-    padding-bottom: 20px; /* [수정] 버튼 영역 제거로 여백 축소 */
+    padding-bottom: 20px; /* 버튼 영역 제거로 여백 축소 */
 }
 
 header {
@@ -20,14 +20,14 @@ header {
 header h1 { font-size: 24px; margin: 0; }
 header a { color: #fff; text-decoration: none; font-size: 16px; }
 
-/* [추가] 헤더 내비게이션 그룹 */
+/* 헤더 내비게이션 그룹 */
 .header-nav {
     display: flex;
     gap: 20px; /* 버튼 사이 간격 */
     align-items: center;
 }
 
-/* [추가] 헤더 링크 스타일 통일 */
+/* 헤더 링크 스타일 통일 */
 .nav-link {
     color: #ccc;
     text-decoration: none;
@@ -50,7 +50,7 @@ header > a:hover {
     color: #fff;
 }
 
-/* [수정] 카드 컨테이너 높이 확대 */
+/* 카드 컨테이너 높이 확대 */
 .card-container {
     position: relative;
     width: 100%;
@@ -61,7 +61,7 @@ header > a:hover {
     align-items: center; /* 세로 중앙 정렬 */
 }
 
-/* [수정] 카드 크기 확대 및 중앙 배치 */
+/* 카드 크기 확대 및 중앙 배치 */
 .video-card {
     position: absolute;
     top: 5%;
@@ -70,11 +70,11 @@ header > a:hover {
     
     width: 90%;
     max-width: 500px; /* [확대] 450px → 500px */
-    max-height: 85vh; /* [추가] 화면 높이의 85%로 제한 */
+    max-height: 85vh; /* 화면 높이의 85%로 제한 */
     background-color: #2f2f2f;
     border-radius: 12px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-    overflow-y: auto; /* [추가] 내용이 많으면 스크롤 */
+    overflow-y: auto; /*  내용이 많으면 스크롤 */
     overflow-x: hidden;
     
     transition: transform 0.3s ease, opacity 0.3s ease;
@@ -96,7 +96,7 @@ header > a:hover {
     width: 100%;
     height: auto;
     display: block;
-    pointer-events: none; /* [추가] 이미지 드래그 방지 */
+    pointer-events: none; /* 이미지 드래그 방지 */
 }
 
 .card-info {
@@ -508,7 +508,7 @@ header > a:hover {
     margin-bottom: 20px;
   }
   
-/* --- [Final] 별점 시스템 (SVG Mask 기법 - 완벽한 모양 보장) --- */
+/* --- 별점 시스템 (SVG Mask 기법 - 완벽한 모양 보장) --- */
 .rating-input {
     display: flex;
     flex-direction: row-reverse; /* 5점 -> 0.5점 순서 */
@@ -612,7 +612,7 @@ header > a:hover {
     overflow-y: auto;
   }
   
-/* [추가] 모달 내 이미지 강제 스타일 */
+/* 모달 내 이미지 강제 스타일 */
 .video-slider img {
     width: 100%;
     height: auto;
