@@ -115,4 +115,4 @@ curl -X POST "http://localhost:3000/api/admin/seed?limit=20"
 | 두 OTT에 모두 있는 영화를 `tmdbId` 하나로 upsert | `controllers/videoController.js#L193`, `#L198-L202` | 나중에 시딩한 OTT로 `ottPlatform`이 덮어써져 앞 OTT의 필터에서 빠짐 | `ottPlatform`을 배열로 두고 `$addToSet` |
 | 단건 임포트가 필수 필드 `tmdbId`를 넣지 않음 | `controllers/videoController.js#L101-L137` | `POST /api/admin/import`가 검증 오류로 실패 | `tmdbId: movie.id` 추가 |
 
-테스트 코드는 없습니다. 위 실행 화면은 회원가입부터 검색까지 브라우저 자동화로 한 번씩 동작을 확인한 결과입니다.
+테스트 코드는 없습니다. 위 실행 화면은 회원가입부터 검색까지 브라우저 자동화로 한 번씩 동작을 확인한 결과입니다(포트폴리오 정리 중 2026-10-13 Claude Code로 실행).
