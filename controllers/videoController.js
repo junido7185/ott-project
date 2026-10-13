@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Video = require("../models/Video"); // Video 모델
 const User = require("../models/User"); // User 모델
+const escapeRegex = require("../utils/escapeRegex");
 
 // .env 파일에서 API 키 불러오기
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
@@ -37,13 +38,15 @@ const getGenreMap = async () => {
 // @desc    (관리자용) 새 비디오/콘텐츠 추가
 // @route   POST /api/videos
 const createVideo = asyncHandler(async (req, res) => {
-    const { title, description, posterImageUrl, ottPlatform, genre } = req.body;
+    const { tmdbId, title, description, posterImageUrl, ottPlatform, genre } = req.body;
 
-    if (!title || !description || !posterImageUrl || !ottPlatform) {
+    // tmdbId는 스키마에서 required + unique
+    if (!tmdbId || !title || !description || !posterImageUrl || !ottPlatform) {
         return res.status(400).send("필수값이 입력되지 않았습니다.");
     }
 
     const video = await Video.create({
+        tmdbId,
         title,
         description,
         posterImageUrl,
@@ -81,7 +84,7 @@ const getNextVideo = asyncHandler(async (req, res) => {
     }
     // 장르 필터링
     if (selectedGenre) {
-        query.genre = { $regex: selectedGenre, $options: 'i' };
+        query.genre = { $regex: escapeRegex(selectedGenre), $options: 'i' };
     }
 
     // 랜덤하게 하나 뽑기 (count -> skip 방식)
@@ -121,8 +124,15 @@ const importVideoFromTmdb = asyncHandler(async (req, res) => {
     // 3. TMDb 검색 결과 중 첫 번째 항목(가장 정확)을 사용
     const movie = tmdbData.results[0];
 
+    // 이미 등록된 작품이면 중복 저장하지 않음 (tmdbId는 unique)
+    const exists = await Video.findOne({ tmdbId: movie.id });
+    if (exists) {
+        return res.status(409).json(exists);
+    }
+
     // 4. 우리 DB 스키마 형식에 맞게 데이터를 "가공"
     const videoData = {
+        tmdbId: movie.id, // 스키마 필수값 (누락 시 저장 실패)
         title: movie.title,
         description: movie.overview, // TMDb의 'overview'를 우리 'description'으로
         posterImageUrl: `http://image.tmdb.org/t/p/w500${movie.poster_path}`, // TMDb 포스터 URL 조합
@@ -229,13 +239,13 @@ const seedDatabase = asyncHandler(async (req, res) => {
 const searchVideos = asyncHandler(async (req, res) => {
     const { q } = req.query;
     
-    if (!q || q.trim() === '') {
+    if (typeof q !== 'string' || q.trim() === '') {
         return res.status(400).json({ message: "검색어를 입력하세요." });
     }
 
     // 제목으로 검색 (대소문자 구분 없이)
     const videos = await Video.find({
-        title: { $regex: q, $options: 'i' }
+        title: { $regex: escapeRegex(q.trim()), $options: 'i' }
     }).limit(20);
 
     res.status(200).json(videos);

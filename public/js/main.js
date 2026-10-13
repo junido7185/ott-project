@@ -2,6 +2,16 @@
 let MY_USER_ID;
 let selectedRating = 0;
 
+// 사용자 입력(닉네임/한줄평 등)을 innerHTML에 넣기 전 HTML 이스케이프 (Stored XSS 방지)
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     MY_USER_ID = document.body.dataset.userId;
     
@@ -122,9 +132,9 @@ async function loadReviews() {
         
         container.innerHTML = reviews.map(review => `
             <div class="review-item-card">
-                <div class="review-author">${review.username}</div>
+                <div class="review-author">${escapeHtml(review.username)}</div>
                 <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
-                <div class="review-comment">${review.comment}</div>
+                <div class="review-comment">${escapeHtml(review.comment)}</div>
             </div>
         `).join('');
         
@@ -138,7 +148,8 @@ async function handleLikeClick(videoId) {
     if (!videoId) return console.error("비디오 ID를 찾을 수 없습니다.");
 
     try {
-        await fetch(`/api/users/${MY_USER_ID}/like/${videoId}`, { method: 'POST' });
+        // 대상 유저는 서버가 세션으로 판단 (URL의 userId 자리는 'me'로 고정)
+        await fetch(`/api/users/me/like/${encodeURIComponent(videoId)}`, { method: 'POST' });
         loadNextVideo();
     } catch (err) {
         console.error("좋아요 처리 에러:", err);
@@ -150,7 +161,7 @@ async function handlePassClick(videoId) {
     if (!videoId) return console.error("비디오 ID를 찾을 수 없습니다.");
 
     try {
-        await fetch(`/api/users/${MY_USER_ID}/pass/${videoId}`, { method: 'POST' });
+        await fetch(`/api/users/me/pass/${encodeURIComponent(videoId)}`, { method: 'POST' });
         loadNextVideo();
     } catch (err) {
         console.error("싫어요 처리 에러:", err);
@@ -166,8 +177,8 @@ async function loadNextVideo() {
         
         //  쿼리 스트링 조립 (OTT와 장르 모두 반영되도록)
         let apiUrl = `/api/videos/next?`;
-        if (selectedOtt) apiUrl += `ott=${selectedOtt}&`;
-        if (selectedGenre) apiUrl += `genre=${selectedGenre}&`;
+        if (selectedOtt) apiUrl += `ott=${encodeURIComponent(selectedOtt)}&`;
+        if (selectedGenre) apiUrl += `genre=${encodeURIComponent(selectedGenre)}&`;
             
         const response = await fetch(apiUrl);
         const data = await response.json();
@@ -175,7 +186,7 @@ async function loadNextVideo() {
 
         if (!response.ok || data.message) {
             // 메시지 표시 (예: "해당 조건의 볼 비디오가 없습니다.")
-            cardContainer.innerHTML = `<h2>${data.message || "더 이상 볼 비디오가 없습니다."}</h2>`;
+            cardContainer.innerHTML = `<h2>${escapeHtml(data.message || "더 이상 볼 비디오가 없습니다.")}</h2>`;
             return;
         }
 

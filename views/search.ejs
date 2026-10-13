@@ -156,6 +156,19 @@
     </div>
 
     <script>
+        // 사용자 입력(닉네임/한줄평 등)을 innerHTML에 넣기 전 HTML 이스케이프 (Stored XSS 방지)
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 검색 결과 캐시 (onclick 속성에 JSON을 직접 넣지 않고 인덱스로 참조)
+        let searchResults = [];
+
         let currentVideoId = null;
 
         // OTT 링크 생성 함수
@@ -180,6 +193,7 @@
             try {
                 const response = await fetch(`/api/videos/search?q=${encodeURIComponent(query)}`);
                 const videos = await response.json();
+                searchResults = Array.isArray(videos) ? videos : [];
 
                 const resultsContainer = document.getElementById('search-results');
                 if (videos.length === 0) {
@@ -187,10 +201,10 @@
                     return;
                 }
 
-                resultsContainer.innerHTML = videos.map(video => `
-                    <div class="search-item" onclick='openVideoModal(${JSON.stringify(video).replace(/'/g, "&#39;")})'>
-                        <img src="${video.posterImageUrl}" alt="${video.title}">
-                        <h4>${video.title}</h4>
+                resultsContainer.innerHTML = videos.map((video, idx) => `
+                    <div class="search-item" onclick="openVideoModal(searchResults[${idx}])">
+                        <img src="${escapeHtml(video.posterImageUrl)}" alt="${escapeHtml(video.title)}">
+                        <h4>${escapeHtml(video.title)}</h4>
                     </div>
                 `).join('');
             } catch (err) {
@@ -206,17 +220,17 @@
             const ottLink = getOttLink(video.ottPlatform, video.title);
 
             document.getElementById('video-detail').innerHTML = `
-                <img src="${video.posterImageUrl}" style="width: 100%; display:block; min-height:300px; background:#000;">
+                <img src="${escapeHtml(video.posterImageUrl)}" style="width: 100%; display:block; min-height:300px; background:#000;">
                 <div class="info-padding">
-                    <h2 style="color: #fff; margin-top:0;">${video.title}</h2>
+                    <h2 style="color: #fff; margin-top:0;">${escapeHtml(video.title)}</h2>
                     <div style="margin-bottom:15px;">
-                        <a href="${ottLink}" target="_blank" style="text-decoration:none;">
-                            <span class="ott-tag" style="background:#e50914; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">${video.ottPlatform} ↗</span>
+                        <a href="${escapeHtml(ottLink)}" target="_blank" style="text-decoration:none;">
+                            <span class="ott-tag" style="background:#e50914; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold; cursor:pointer;">${escapeHtml(video.ottPlatform)} ↗</span>
                         </a>
-                        <span style="background:#555; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; margin-left:8px;">${video.genre}</span>
+                        <span style="background:#555; color:#fff; padding:4px 8px; border-radius:4px; font-size:12px; margin-left:8px;">${escapeHtml(video.genre)}</span>
                         <span style="color:#ffcc00; margin-left:8px; font-weight:bold;">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</span>
                     </div>
-                    <p style="color: #ccc; line-height:1.5;">${video.description}</p>
+                    <p style="color: #ccc; line-height:1.5;">${escapeHtml(video.description)}</p>
                 </div>
             `;
             
@@ -252,10 +266,10 @@
                 reviewList.innerHTML = reviews.map(review => `
                     <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: #fff; font-weight: bold;">${review.username}</span>
+                            <span style="color: #fff; font-weight: bold;">${escapeHtml(review.username)}</span>
                             <span style="color: #ffcc00;">${'★'.repeat(Math.floor(review.rating))}</span>
                         </div>
-                        <p style="color: #ccc; margin: 8px 0; line-height:1.4;">${review.comment}</p>
+                        <p style="color: #ccc; margin: 8px 0; line-height:1.4;">${escapeHtml(review.comment)}</p>
                         <p style="color: #888; font-size: 12px;">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
                     </div>
                 `).join('');
