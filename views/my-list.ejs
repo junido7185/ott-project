@@ -308,7 +308,7 @@
       <hr class="mylist-divider">
       
         <script type="application/json" id="videos-data">
-            <%- JSON.stringify(videos) %>
+            <%- JSON.stringify(videos).replace(/</g, '\\u003c') %>
         </script>
 
         <!-- 전체 좋아요 영상 리스트 (초기에는 숨김) -->
@@ -394,6 +394,16 @@
     </div>
 
     <script>
+    // 사용자 입력(닉네임/한줄평 등)을 innerHTML에 넣기 전 HTML 이스케이프 (Stored XSS 방지)
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     const videosData = document.getElementById('videos-data');
     const videos = videosData ? JSON.parse(videosData.textContent) : [];
 
@@ -489,7 +499,7 @@
             bubble.style.left = `${pos.x}px`;
             bubble.style.top = `${pos.y}px`;
             bubble.style.animationDelay = `${Math.random() * 2}s`;
-            bubble.innerHTML = `<h3>${genre}</h3><span class="count">${count}개</span>`;
+            bubble.innerHTML = `<h3>${escapeHtml(genre)}</h3><span class="count">${count}개</span>`;
 
             bubble.addEventListener('click', () => openModal(genre, genreMap[genre]));
             container.appendChild(bubble);
@@ -513,17 +523,17 @@
         const ottLink = getOttLink(video.ottPlatform, video.title); 
 
         container.innerHTML = `
-            <img src="${video.posterImageUrl}" alt="${video.title}">
+            <img src="${escapeHtml(video.posterImageUrl)}" alt="${escapeHtml(video.title)}">
             <div class="video-info">
-                <h2>${video.title}</h2>
+                <h2>${escapeHtml(video.title)}</h2>
                 <div class="meta">
-                    <a href="${ottLink}" target="_blank" style="text-decoration:none;">
-                        <span class="ott-tag" style="cursor:pointer;">${video.ottPlatform} ↗</span>
+                    <a href="${escapeHtml(ottLink)}" target="_blank" style="text-decoration:none;">
+                        <span class="ott-tag" style="cursor:pointer;">${escapeHtml(video.ottPlatform)} ↗</span>
                     </a>
-                    <span class="genre-tag">${video.genre}</span>
+                    <span class="genre-tag">${escapeHtml(video.genre)}</span>
                     <span class="rating-tag">★ ${video.rating ? video.rating.toFixed(1) : '0.0'}</span>
                 </div>
-                <p>${video.description}</p>
+                <p>${escapeHtml(video.description)}</p>
                 <p style="color: #888; font-size: 12px; margin-top: 10px;">
                     ${currentVideoIndex + 1} / ${currentGenreVideos.length}
                 </p>
@@ -573,10 +583,10 @@
             reviewList.innerHTML = reviews.map(review => `
                 <div class="review-item">
                     <div class="review-header">
-                        <span class="review-user">${review.username}</span>
+                        <span class="review-user">${escapeHtml(review.username)}</span>
                         <span class="review-rating">${'★'.repeat(Math.floor(review.rating))}</span>
                     </div>
-                    <p class="review-comment">${review.comment}</p>
+                    <p class="review-comment">${escapeHtml(review.comment)}</p>
                     <p class="review-date">${new Date(review.createdAt).toLocaleDateString('ko-KR')}</p>
                 </div>
             `).join('');
@@ -656,7 +666,7 @@
         }
         container.innerHTML = videos.map((v, idx) => `
             <div class="all-video-card" data-index="${idx}">
-                <img src="${v.posterImageUrl}" alt="${v.title}" class="all-video-poster">
+                <img src="${escapeHtml(v.posterImageUrl)}" alt="${escapeHtml(v.title)}" class="all-video-poster">
             </div>
         `).join('');
 

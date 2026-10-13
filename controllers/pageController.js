@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Video = require("../models/Video");
 const User = require("../models/User");
+const escapeRegex = require("../utils/escapeRegex");
 
 // OTT 선택 페이지 렌더링
 const renderSelectOttPage = asyncHandler(async (req, res) => {
@@ -65,7 +66,7 @@ const renderMainPage = asyncHandler(async (req, res) => {
     // 장르 필터링 (부분 일치 검색)
     if (selectedGenre) {
         // DB에 "액션, 모험" 등으로 저장되어 있으므로 regex 사용
-        query.genre = { $regex: selectedGenre, $options: 'i' };
+        query.genre = { $regex: escapeRegex(selectedGenre), $options: 'i' };
     }
 
     const nextVideo = await Video.findOne(query);

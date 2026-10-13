@@ -78,6 +78,19 @@
     </div>
 
     <script>
+        // 사용자 입력(닉네임/한줄평 등)을 innerHTML에 넣기 전 HTML 이스케이프 (Stored XSS 방지)
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 수정 버튼에서 기존 별점/한줄평을 찾기 위한 캐시 (onclick 문자열에 한줄평을 직접 넣지 않음)
+        let myReviewsCache = [];
+
         function getOttLink(platform, title) {
             const query = encodeURIComponent(title);
             switch (platform.toLowerCase()) {
@@ -93,6 +106,7 @@
             try {
                 const response = await fetch('/api/reviews/my');
                 const reviews = await response.json();
+                myReviewsCache = Array.isArray(reviews) ? reviews : [];
                 
                 // ID가 reviews-list인 요소를 찾습니다. (이전엔 container를 찾아서 에러남)
                 const container = document.getElementById('reviews-list');
@@ -113,22 +127,22 @@
 
                     return `
                     <div class="review-card">
-                        <img src="${posterUrl}" alt="${videoTitle}">
+                        <img src="${escapeHtml(posterUrl)}" alt="${escapeHtml(videoTitle)}">
                         <div class="review-content">
-                            <h3>${videoTitle} 
-                                <a href="${ottLink}" target="_blank" style="text-decoration:none;">
+                            <h3>${escapeHtml(videoTitle)} 
+                                <a href="${escapeHtml(ottLink)}" target="_blank" style="text-decoration:none;">
                                     <span style="font-size:12px; background:#e50914; color:white; padding:2px 6px; border-radius:4px; margin-left:5px; cursor:pointer;">
-                                        ${ottPlatform} ↗
+                                        ${escapeHtml(ottPlatform)} ↗
                                     </span>
                                 </a>
                             </h3>
-                            <div class="rating">★ ${review.rating}</div>
-                            <p class="comment">${review.comment}</p>
+                            <div class="rating">★ ${escapeHtml(review.rating)}</div>
+                            <p class="comment">${escapeHtml(review.comment)}</p>
                             <div class="date" style="color:#666; font-size:12px;">${new Date(review.createdAt).toLocaleDateString()}</div>
                             
                             <div class="review-actions">
-                                <button class="btn-edit" onclick='editReview("${review._id}", ${review.rating}, "${review.comment}")'>수정</button>
-                                <button class="btn-delete" onclick='deleteReview("${review._id}")'>삭제</button>
+                                <button class="btn-edit" onclick="editReviewById('${escapeHtml(review._id)}')">수정</button>
+                                <button class="btn-delete" onclick="deleteReview('${escapeHtml(review._id)}')">삭제</button>
                             </div>
                         </div>
                     </div>
@@ -136,6 +150,12 @@
             } catch (err) {
                 console.error('리뷰 로드 실패:', err);
             }
+        }
+
+        function editReviewById(reviewId) {
+            const review = myReviewsCache.find(r => r._id === reviewId);
+            if (!review) return;
+            editReview(review._id, review.rating, review.comment);
         }
 
         function editReview(reviewId, currentRating, currentComment) {
