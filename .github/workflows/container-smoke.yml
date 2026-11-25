@@ -1,0 +1,38 @@
+name: Container smoke test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compose-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: ott-ci-${{ github.run_id }}-${{ github.run_attempt }}
+      HOST_PORT: '3000'
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Create disposable secret
+        shell: bash
+        run: |
+          secret=$(openssl rand -hex 32)
+          echo "::add-mask::$secret"
+          printf 'SESSION_SECRET=%s\n' "$secret" >> "$GITHUB_ENV"
+      - name: Validate and start containers
+        run: |
+          docker compose config --quiet
+          docker compose up -d --build --wait --wait-timeout 120
+      - name: Verify database and application behavior
+        run: |
+          docker compose exec -T mongo mongosh --quiet --eval 'db.adminCommand({ping:1}).ok === 1 ? quit(0) : quit(1)'
+          bash tools/compose-smoke.sh
+      - name: Record container status and web logs
+        if: always()
+        run: |
+          docker compose ps --all
+          docker compose logs --tail=30 web
+      - name: Clean disposable environment
+        if: always()
+        run: docker compose down -v --remove-orphans
